@@ -1,5 +1,12 @@
 """
-Service classes for business logic and API orchestration.
+Service layer for Printify API operations.
+
+This module contains service classes that handle business logic
+and orchestrate API calls for different Printify resources.
 """
 
-__all__ = []
+from printify.services.product_service import ProductService
+
+__all__ = [
+    'ProductService',
+]
