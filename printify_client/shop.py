@@ -152,14 +152,25 @@ class Shop:
             >>> info = shop.get_info()
             >>> print(f"Shop: {info.title}")
         """
-        endpoint = f"/shops/{self.shop_id}.json"
+        # Printify API doesn't have a single shop endpoint, so we fetch all shops
+        # and find the one matching our shop_id
+        endpoint = "/shops.json"
         data = self.client.get(endpoint)
         
-        return ShopInfo(
-            id=data.get('id', self.shop_id),
-            title=data.get('title', ''),
-            sales_channel=data.get('sales_channel'),
-        )
+        # API returns list of shops
+        shops = data if isinstance(data, list) else data.get('data', [])
+        
+        # Find shop by ID
+        for shop_data in shops:
+            if str(shop_data.get('id')) == str(self.shop_id):
+                return ShopInfo(
+                    id=shop_data.get('id', self.shop_id),
+                    title=shop_data.get('title', ''),
+                    sales_channel=shop_data.get('sales_channel'),
+                )
+        
+        # Shop not found
+        raise NotFoundError("Shop", self.shop_id)
     
     def _resolve_shop_id(self, shop_name: str) -> str:
         """

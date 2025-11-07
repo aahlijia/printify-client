@@ -20,6 +20,14 @@ with open(fixtures_path) as f:
 @responses.activate
 def test_shop_initialization_with_shop_id():
     """Test Shop initialization with shop_id."""
+    # Mock shops list (needed for Shop initialization)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops.json",
+        json=FIXTURES["shop_list_response"],
+        status=200,
+    )
+    
     responses.add(
         responses.GET,
         "https://api.printify.com/v1/shops/shop_123.json",
@@ -64,6 +72,14 @@ def test_shop_initialization_with_env_api_key():
     """Test Shop initialization using environment variable for API key."""
     # Set environment variable
     os.environ['PRINTIFY_API_KEY'] = 'env_api_key'
+    
+    # Mock shops list (needed for Shop initialization)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops.json",
+        json=FIXTURES["shop_list_response"],
+        status=200,
+    )
     
     responses.add(
         responses.GET,
@@ -125,6 +141,14 @@ def test_shop_initialization_invalid_shop_name():
 @responses.activate
 def test_shop_get_products():
     """Test get_products() returns list of Product objects."""
+    # Mock shops list (needed for Shop initialization)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops.json",
+        json=FIXTURES["shop_list_response"],
+        status=200,
+    )
+    
     # Mock shop info
     responses.add(
         responses.GET,
@@ -161,6 +185,14 @@ def test_shop_get_products():
 @responses.activate
 def test_shop_get_product():
     """Test get_product() returns a single Product object."""
+    # Mock shops list (needed for Shop initialization)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops.json",
+        json=FIXTURES["shop_list_response"],
+        status=200,
+    )
+    
     # Mock shop info
     responses.add(
         responses.GET,
@@ -188,6 +220,14 @@ def test_shop_get_product():
 @responses.activate
 def test_shop_filter_products():
     """Test filter_products() filters by attributes."""
+    # Mock shops list (needed for Shop initialization)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops.json",
+        json=FIXTURES["shop_list_response"],
+        status=200,
+    )
+    
     # Mock shop info
     responses.add(
         responses.GET,
@@ -223,6 +263,14 @@ def test_shop_filter_products():
 @responses.activate
 def test_shop_calculate_shipping():
     """Test calculate_shipping() returns ShippingCost."""
+    # Mock shops list (needed for Shop initialization)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops.json",
+        json=FIXTURES["shop_list_response"],
+        status=200,
+    )
+    
     # Mock shop info
     responses.add(
         responses.GET,
@@ -259,14 +307,10 @@ def test_shop_calculate_shipping():
         json={
             "profiles": [
                 {
-                    "variants": [101, 102, 103],
-                    "shipping": [
-                        {
-                            "country": "US",
-                            "first_item": {"cost": 450},
-                            "additional_items": {"cost": 200}
-                        }
-                    ]
+                    "variant_ids": [101, 102, 103],
+                    "first_item": {"cost": 450},
+                    "additional_items": {"cost": 200},
+                    "countries": ["US"]
                 }
             ]
         },
@@ -300,6 +344,14 @@ def test_shop_calculate_shipping():
 @responses.activate
 def test_shop_create_order():
     """Test create_order() returns Order object."""
+    # Mock shops list (needed for Shop initialization)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops.json",
+        json=FIXTURES["shop_list_response"],
+        status=200,
+    )
+    
     # Mock shop info
     responses.add(
         responses.GET,
@@ -348,6 +400,14 @@ def test_shop_create_order():
 @responses.activate
 def test_shop_clear_cache():
     """Test clear_cache() clears cached data."""
+    # Mock shops list (needed for Shop initialization)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops.json",
+        json=FIXTURES["shop_list_response"],
+        status=200,
+    )
+    
     # Mock shop info
     responses.add(
         responses.GET,
@@ -397,6 +457,14 @@ def test_shop_clear_cache():
 @responses.activate
 def test_shop_caching_disabled():
     """Test that caching can be disabled."""
+    # Mock shops list (needed for Shop initialization)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops.json",
+        json=FIXTURES["shop_list_response"],
+        status=200,
+    )
+    
     # Mock shop info
     responses.add(
         responses.GET,

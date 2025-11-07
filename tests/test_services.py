@@ -31,7 +31,12 @@ def test_product_service_get_all_products():
     
     def mock_get(endpoint, params=None):
         call_count[0] += 1
-        page = params.get("page", 1) if params else 1
+        # Extract page number from endpoint URL
+        if "?page=" in endpoint:
+            page = int(endpoint.split("?page=")[1].split("&")[0])
+        else:
+            page = 1
+        
         if page == 1:
             return FIXTURES["product_list_response"]
         else:
@@ -57,7 +62,12 @@ def test_product_service_caching():
     mock_client = Mock(spec=APIClient)
     
     def mock_get(endpoint, params=None):
-        page = params.get("page", 1) if params else 1
+        # Extract page number from endpoint URL
+        if "?page=" in endpoint:
+            page = int(endpoint.split("?page=")[1].split("&")[0])
+        else:
+            page = 1
+        
         if page == 1:
             return FIXTURES["product_list_response"]
         else:
@@ -106,7 +116,12 @@ def test_product_service_filter_disabled_variants():
     mock_client = Mock(spec=APIClient)
     
     def mock_get(endpoint, params=None):
-        page = params.get("page", 1) if params else 1
+        # Extract page number from endpoint URL
+        if "?page=" in endpoint:
+            page = int(endpoint.split("?page=")[1].split("&")[0])
+        else:
+            page = 1
+        
         if page == 1:
             return product_data
         else:
@@ -153,14 +168,10 @@ def test_shipping_service_calculate_cost():
     shipping_response = {
         "profiles": [
             {
-                "variants": [101, 102],
-                "shipping": [
-                    {
-                        "country": "US",
-                        "first_item": {"cost": 450},
-                        "additional_items": {"cost": 200}
-                    }
-                ]
+                "variant_ids": [101, 102],
+                "first_item": {"cost": 450},
+                "additional_items": {"cost": 200},
+                "countries": ["US"]
             }
         ]
     }
@@ -216,14 +227,10 @@ def test_shipping_service_first_item_pricing():
     shipping_response = {
         "profiles": [
             {
-                "variants": [101],
-                "shipping": [
-                    {
-                        "country": "US",
-                        "first_item": {"cost": 500},
-                        "additional_items": {"cost": 250}
-                    }
-                ]
+                "variant_ids": [101],
+                "first_item": {"cost": 500},
+                "additional_items": {"cost": 250},
+                "countries": ["US"]
             }
         ]
     }
