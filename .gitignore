@@ -129,7 +129,6 @@ dmypy.json
 *.swo
 *~
 .ki*
-docs*
 
 # OS
 .DS_Store

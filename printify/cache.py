@@ -77,10 +77,15 @@ class CacheManager:
             value: Value to cache
         """
         with self._lock:
+            # If max_size is 0, don't cache anything
+            if self.max_size == 0:
+                return
+            
             # Evict least recently used item if at capacity
             if len(self._cache) >= self.max_size and key not in self._cache:
-                oldest = self._access_order.pop(0)
-                del self._cache[oldest]
+                if self._access_order:  # Only pop if list is not empty
+                    oldest = self._access_order.pop(0)
+                    del self._cache[oldest]
             
             # Calculate expiry time
             expiry = time.time() + self.ttl
