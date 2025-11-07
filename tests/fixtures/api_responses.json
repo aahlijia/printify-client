@@ -1,0 +1,152 @@
+{
+  "product_response": {
+    "id": "test_product_123",
+    "title": "Test T-Shirt",
+    "description": "A comfortable test t-shirt",
+    "blueprint_id": 3,
+    "print_provider_id": 5,
+    "variants": [
+      {
+        "id": 101,
+        "title": "Small / Black",
+        "is_enabled": true,
+        "price": 2500
+      },
+      {
+        "id": 102,
+        "title": "Medium / Black",
+        "is_enabled": true,
+        "price": 2700
+      },
+      {
+        "id": 103,
+        "title": "Large / White",
+        "is_enabled": false,
+        "price": 2800
+      }
+    ],
+    "images": [
+      {
+        "src": "https://example.com/image1.jpg",
+        "variant_ids": [101, 102],
+        "position": "front",
+        "is_default": true
+      },
+      {
+        "src": "https://example.com/image2.jpg",
+        "variant_ids": [103],
+        "position": "back",
+        "is_default": false
+      }
+    ]
+  },
+  "product_list_response": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": "prod_001",
+        "title": "Product 1",
+        "description": "First product",
+        "blueprint_id": 3,
+        "print_provider_id": 5,
+        "variants": [
+          {
+            "id": 201,
+            "title": "Small",
+            "is_enabled": true,
+            "price": 2000
+          }
+        ],
+        "images": []
+      },
+      {
+        "id": "prod_002",
+        "title": "Product 2",
+        "description": "Second product",
+        "blueprint_id": 4,
+        "print_provider_id": 6,
+        "variants": [
+          {
+            "id": 301,
+            "title": "Medium",
+            "is_enabled": true,
+            "price": 3000
+          }
+        ],
+        "images": []
+      }
+    ],
+    "last_page": 1,
+    "total": 2
+  },
+  "shipping_profile_response": {
+    "profiles": [
+      {
+        "variant_ids": [101, 102],
+        "first_item": {
+          "cost": 450,
+          "currency": "USD"
+        },
+        "additional_items": {
+          "cost": 200,
+          "currency": "USD"
+        },
+        "countries": ["US"]
+      },
+      {
+        "variant_ids": [103],
+        "first_item": {
+          "cost": 500,
+          "currency": "USD"
+        },
+        "additional_items": {
+          "cost": 250,
+          "currency": "USD"
+        },
+        "countries": ["REST_OF_THE_WORLD"]
+      }
+    ]
+  },
+  "order_response": {
+    "id": "order_12345",
+    "external_id": "ext_order_001",
+    "status": "pending",
+    "created_at": "2024-01-15T10:30:00Z",
+    "line_items": [
+      {
+        "product_id": "test_product_123",
+        "variant_id": 101,
+        "quantity": 2
+      }
+    ],
+    "address_to": {
+      "first_name": "John",
+      "last_name": "Doe",
+      "email": "john@example.com",
+      "country": "US",
+      "region": "CA",
+      "city": "San Francisco",
+      "zip": "94102",
+      "address1": "123 Main St",
+      "address2": "Apt 4B",
+      "phone": "+1234567890"
+    }
+  },
+  "shop_list_response": [
+    {
+      "id": "shop_123",
+      "title": "Test Shop",
+      "sales_channel": "custom"
+    },
+    {
+      "id": "shop_456",
+      "title": "Another Shop",
+      "sales_channel": "etsy"
+    }
+  ],
+  "shop_info_response": {
+    "id": "shop_123",
+    "title": "Test Shop",
+    "sales_channel": "custom"
+  }
+}
