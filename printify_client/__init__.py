@@ -9,7 +9,7 @@ management, response parsing, and data structuring to provide developers with
 a clean, Pythonic API for Printify integration.
 
 Example:
-    >>> from printify import Shop, LineItem, Address
+    >>> from printify_client import Shop, LineItem, Address
     >>> 
     >>> # Initialize shop
     >>> shop = Shop(shop_id="12345", api_key="your_api_key")
@@ -42,16 +42,16 @@ Example:
 __version__ = "0.1.0"
 
 # Import main entry point
-from printify.shop import Shop
+from printify_client.shop import Shop
 
 # Import model classes
-from printify.models.product import Product, Variant, Image
-from printify.models.order import Order, LineItem, Address
-from printify.models.shipping import ShippingCost, ShippingBreakdown
-from printify.models.shop import ShopInfo
+from printify_client.models.product import Product, Variant, Image
+from printify_client.models.order import Order, LineItem, Address
+from printify_client.models.shipping import ShippingCost, ShippingBreakdown
+from printify_client.models.shop import ShopInfo
 
 # Import exception classes
-from printify.exceptions import (
+from printify_client.exceptions import (
     PrintifyError,
     AuthenticationError,
     NotFoundError,

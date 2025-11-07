@@ -10,12 +10,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from decimal import Decimal
 from typing import Dict, List, Tuple, Any, Optional
 
-from printify.client import APIClient
-from printify.cache import CacheManager
-from printify.models.order import LineItem, Address
-from printify.models.product import Product
-from printify.models.shipping import ShippingCost, ShippingBreakdown
-from printify.exceptions import ShippingCalculationError
+from printify_client.client import APIClient
+from printify_client.cache import CacheManager
+from printify_client.models.order import LineItem, Address
+from printify_client.models.product import Product
+from printify_client.models.shipping import ShippingCost, ShippingBreakdown
+from printify_client.exceptions import ShippingCalculationError
 
 
 class ShippingService:

@@ -18,13 +18,13 @@ A Python library for interacting with the Printify REST API. This library provid
 Install the library using pip:
 
 ```bash
-pip install printify-python
+pip install printify-client
 ```
 
 For development:
 
 ```bash
-pip install printify-python[dev]
+pip install printify-client[dev]
 ```
 
 ## Quick Start
@@ -32,7 +32,7 @@ pip install printify-python[dev]
 ### Initialize a Shop
 
 ```python
-from printify import Shop
+from printify_client import Shop
 
 # Using shop ID
 shop = Shop(shop_id="12345", api_key="your_api_key")
@@ -68,7 +68,7 @@ tshirts = shop.filter_products(blueprint_id=3)
 ### Calculate Shipping Costs
 
 ```python
-from printify import LineItem, Address
+from printify_client import LineItem, Address
 
 # Create line items
 items = [
@@ -100,7 +100,7 @@ for item in shipping.breakdown:
 ### Create an Order
 
 ```python
-from printify import LineItem, Address
+from printify_client import LineItem, Address
 
 # Create order
 order = shop.create_order(
@@ -121,7 +121,7 @@ print(f"Created at: {order.created_at}")
 The library provides specific exception types for different error scenarios:
 
 ```python
-from printify import (
+from printify_client import (
     Shop,
     AuthenticationError,
     NotFoundError,
@@ -224,7 +224,7 @@ affordable_tshirts = [
 ### Batch Order Processing
 
 ```python
-from printify import Shop, LineItem, Address
+from printify_client import Shop, LineItem, Address
 
 shop = Shop(shop_id="12345", api_key="your_api_key")
 
@@ -422,7 +422,7 @@ except AuthenticationError:
 
 ```python
 # List all accessible shops
-from printify.client import APIClient
+from printify_client.client import APIClient
 
 client = APIClient(api_key="your_api_key")
 shops = client.get("/shops.json")
@@ -771,8 +771,8 @@ Raised when API request times out.
 
 ```bash
 # Clone the repository
-git clone https://github.com/printify/printify-python.git
-cd printify-python
+git clone https://github.com/printify/printify-client.git
+cd printify-client
 
 # Create virtual environment
 python -m venv venv
@@ -811,7 +811,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Support
 
-For issues and questions, please use the [GitHub issue tracker](https://github.com/printify/printify-python/issues).
+For issues and questions, please use the [GitHub issue tracker](https://github.com/printify/printify-client/issues).
 
 ## Documentation
 
@@ -822,4 +822,4 @@ For issues and questions, please use the [GitHub issue tracker](https://github.c
 ## Links
 
 - [Printify API Documentation](https://developers.printify.com/)
-- [GitHub Repository](https://github.com/printify/printify-python)
+- [GitHub Repository](https://github.com/printify/printify-client)

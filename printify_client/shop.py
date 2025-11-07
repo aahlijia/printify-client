@@ -9,16 +9,16 @@ operations including products, orders, and shipping calculations.
 import os
 from typing import Optional, List
 
-from printify.client import APIClient
-from printify.cache import CacheManager
-from printify.models.shop import ShopInfo
-from printify.models.product import Product
-from printify.models.order import Order, LineItem, Address
-from printify.models.shipping import ShippingCost
-from printify.services.product_service import ProductService
-from printify.services.shipping_service import ShippingService
-from printify.services.order_service import OrderService
-from printify.exceptions import ValidationError, NotFoundError
+from printify_client.client import APIClient
+from printify_client.cache import CacheManager
+from printify_client.models.shop import ShopInfo
+from printify_client.models.product import Product
+from printify_client.models.order import Order, LineItem, Address
+from printify_client.models.shipping import ShippingCost
+from printify_client.services.product_service import ProductService
+from printify_client.services.shipping_service import ShippingService
+from printify_client.services.order_service import OrderService
+from printify_client.exceptions import ValidationError, NotFoundError
 
 
 class Shop:

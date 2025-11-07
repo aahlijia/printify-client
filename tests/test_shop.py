@@ -6,9 +6,9 @@ from pathlib import Path
 from decimal import Decimal
 import responses
 
-from printify.shop import Shop
-from printify.models.order import LineItem, Address
-from printify.exceptions import ValidationError, AuthenticationError, NotFoundError
+from printify_client.shop import Shop
+from printify_client.models.order import LineItem, Address
+from printify_client.exceptions import ValidationError, AuthenticationError, NotFoundError
 
 
 # Load test fixtures

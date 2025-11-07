@@ -2,8 +2,8 @@
 
 import time
 import responses
-from printify.client import APIClient
-from printify.exceptions import (
+from printify_client.client import APIClient
+from printify_client.exceptions import (
     AuthenticationError,
     NotFoundError,
     APIError,

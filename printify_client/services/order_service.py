@@ -8,9 +8,9 @@ and validation logic for the Printify API.
 from typing import List, Optional
 from datetime import datetime
 
-from printify.client import APIClient
-from printify.models.order import Order, LineItem, Address
-from printify.exceptions import ValidationError, APIError
+from printify_client.client import APIClient
+from printify_client.models.order import Order, LineItem, Address
+from printify_client.exceptions import ValidationError, APIError
 
 
 class OrderService:

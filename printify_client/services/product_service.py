@@ -7,10 +7,10 @@ operations including fetching, filtering, and caching product data.
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Any, Optional
-from printify.client import APIClient
-from printify.cache import CacheManager
-from printify.models import Product, parse_product
-from printify.exceptions import NotFoundError
+from printify_client.client import APIClient
+from printify_client.cache import CacheManager
+from printify_client.models import Product, parse_product
+from printify_client.exceptions import NotFoundError
 
 
 class ProductService:

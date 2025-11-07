@@ -6,14 +6,14 @@ from pathlib import Path
 from unittest.mock import Mock, MagicMock
 import responses
 
-from printify.services.product_service import ProductService
-from printify.services.shipping_service import ShippingService
-from printify.services.order_service import OrderService
-from printify.client import APIClient
-from printify.cache import CacheManager
-from printify.models.product import Product, Variant
-from printify.models.order import LineItem, Address
-from printify.exceptions import ValidationError, ShippingCalculationError
+from printify_client.services.product_service import ProductService
+from printify_client.services.shipping_service import ShippingService
+from printify_client.services.order_service import OrderService
+from printify_client.client import APIClient
+from printify_client.cache import CacheManager
+from printify_client.models.product import Product, Variant
+from printify_client.models.order import LineItem, Address
+from printify_client.exceptions import ValidationError, ShippingCalculationError
 
 
 # Load test fixtures

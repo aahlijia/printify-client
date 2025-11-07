@@ -5,7 +5,7 @@ A quick reference guide for the Printify Python library.
 ## Installation
 
 ```bash
-pip install printify-python
+pip install printify-client
 ```
 
 ## Environment Setup
@@ -17,7 +17,7 @@ export PRINTIFY_API_KEY="your_api_key_here"
 ## Quick Start
 
 ```python
-from printify import Shop, LineItem, Address
+from printify_client import Shop, LineItem, Address
 
 # Initialize shop
 shop = Shop(shop_id="12345")
@@ -136,7 +136,7 @@ Address(
 ## Error Handling
 
 ```python
-from printify import (
+from printify_client import (
     AuthenticationError,
     NotFoundError,
     APIError,
@@ -296,7 +296,7 @@ Not cached:
 5. **Use type hints**
    ```python
    from typing import List
-   from printify import Product
+   from printify_client import Product
    
    def process_products(products: List[Product]) -> None:
        ...

@@ -2,7 +2,7 @@
 
 import time
 import threading
-from printify.cache import CacheManager
+from printify_client.cache import CacheManager
 
 
 def test_cache_set_and_get():
