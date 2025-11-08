@@ -10,12 +10,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from decimal import Decimal
 from typing import Dict, List, Tuple, Any, Optional
 
-from printify.client import APIClient
-from printify.cache import CacheManager
-from printify.models.order import LineItem, Address
-from printify.models.product import Product
-from printify.models.shipping import ShippingCost, ShippingBreakdown
-from printify.exceptions import ShippingCalculationError
+from printify_client.client import APIClient
+from printify_client.cache import CacheManager
+from printify_client.models.order import LineItem, Address
+from printify_client.models.product import Product
+from printify_client.models.shipping import ShippingCost, ShippingBreakdown
+from printify_client.exceptions import ShippingCalculationError
 
 
 class ShippingService:
@@ -100,7 +100,7 @@ class ShippingService:
                 )
             
             # Find matching profile
-            profile = self._find_profile(item, product, profiles)
+            profile = self._find_profile(item, product, profiles, address.country)
             
             # Calculate cost for this item
             item_cost = self._calculate_item_cost(item, profile, address.country)
@@ -251,21 +251,23 @@ class ShippingService:
         self,
         item: LineItem,
         product: Product,
-        profiles: Dict[Tuple[int, int], Dict[str, Any]]
+        profiles: Dict[Tuple[int, int], Dict[str, Any]],
+        country: str
     ) -> Dict[str, Any]:
         """
-        Find shipping profile for a specific variant.
+        Find shipping profile for a specific variant and country.
         
-        Matches the variant_id to the appropriate shipping profile
-        within the fetched profiles data.
+        Matches the variant_id and destination country to the appropriate 
+        shipping profile within the fetched profiles data.
         
         Args:
             item: Line item with variant_id to match
             product: Product containing blueprint and provider info
             profiles: Dictionary of fetched shipping profiles
+            country: Destination country code
         
         Returns:
-            Shipping profile data for the variant
+            Shipping profile data for the variant and country
         
         Raises:
             ShippingCalculationError: If profile cannot be found for variant
@@ -280,21 +282,42 @@ class ShippingService:
             )
         
         # The API returns profiles in a 'profiles' array
-        # Each profile has 'variants' array with variant IDs
+        # Each profile has 'variant_ids' array with variant IDs
         if 'profiles' not in profile_data:
             raise ShippingCalculationError(
                 f"Invalid shipping profile response for product {product.id}"
             )
         
-        # Find profile that includes this variant
+        # Find profile that includes this variant and covers the destination country
+        matching_profiles = []
         for profile in profile_data['profiles']:
-            if 'variants' in profile and item.variant_id in profile['variants']:
+            # Check if variant is in this profile
+            if 'variant_ids' in profile and item.variant_id in profile['variant_ids']:
+                matching_profiles.append(profile)
+        
+        if not matching_profiles:
+            raise ShippingCalculationError(
+                f"No shipping profile found for variant {item.variant_id} "
+                f"of product {product.id}"
+            )
+        
+        # Find the profile that covers the destination country
+        # Try exact country match first, then REST_OF_THE_WORLD
+        for profile in matching_profiles:
+            countries = profile.get('countries', [])
+            if country in countries:
                 return profile
         
-        # If no exact match, raise error
+        # Fallback to REST_OF_THE_WORLD
+        for profile in matching_profiles:
+            countries = profile.get('countries', [])
+            if 'REST_OF_THE_WORLD' in countries:
+                return profile
+        
+        # If no country match found, raise error
         raise ShippingCalculationError(
             f"No shipping profile found for variant {item.variant_id} "
-            f"of product {product.id}"
+            f"of product {product.id} shipping to {country}"
         )
     
     def _calculate_item_cost(
@@ -310,44 +333,28 @@ class ShippingService:
         - First item: first_item cost
         - Additional items: additional_items cost each
         
-        Handles country matching with fallback to "REST_OF_THE_WORLD".
-        
         Args:
             item: Line item with quantity
-            profile: Shipping profile with cost data
-            country: Destination country code
+            profile: Shipping profile with cost data (already matched to country)
+            country: Destination country code (for error messages)
         
         Returns:
             Total shipping cost for this item (all quantities)
         
         Raises:
-            ShippingCalculationError: If cost data not found for country
+            ShippingCalculationError: If cost data is missing
         """
-        # Get shipping costs for the country
-        shipping_costs = profile.get('shipping', [])
+        # Extract first-item and additional-items costs (in cents)
+        first_item_data = profile.get('first_item', {})
+        additional_items_data = profile.get('additional_items', {})
         
-        # Try to find exact country match first
-        country_cost = None
-        rest_of_world_cost = None
-        
-        for cost_entry in shipping_costs:
-            if cost_entry.get('country') == country:
-                country_cost = cost_entry
-                break
-            elif cost_entry.get('country') == 'REST_OF_THE_WORLD':
-                rest_of_world_cost = cost_entry
-        
-        # Use country-specific cost if available, otherwise fallback to REST_OF_THE_WORLD
-        cost_data = country_cost or rest_of_world_cost
-        
-        if not cost_data:
+        if not first_item_data or 'cost' not in first_item_data:
             raise ShippingCalculationError(
-                f"No shipping cost found for country {country} or REST_OF_THE_WORLD"
+                f"Missing first_item cost data in shipping profile"
             )
         
-        # Extract first-item and additional-items costs (in cents)
-        first_item_cost = Decimal(cost_data.get('first_item', {}).get('cost', 0)) / 100
-        additional_item_cost = Decimal(cost_data.get('additional_items', {}).get('cost', 0)) / 100
+        first_item_cost = Decimal(first_item_data['cost']) / 100
+        additional_item_cost = Decimal(additional_items_data.get('cost', 0)) / 100
         
         # Calculate total cost
         if item.quantity == 1:

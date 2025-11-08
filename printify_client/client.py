@@ -11,7 +11,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from .exceptions import (
+from printify_client.exceptions import (
     AuthenticationError,
     NotFoundError,
     APIError,

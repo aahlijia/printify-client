@@ -16,7 +16,7 @@ This document provides comprehensive examples for using the Printify Python libr
 ### Initialize with Shop ID
 
 ```python
-from printify import Shop
+from printify_client import Shop
 
 shop = Shop(
     shop_id="12345",
@@ -27,7 +27,7 @@ shop = Shop(
 ### Initialize with Shop Name
 
 ```python
-from printify import Shop
+from printify_client import Shop
 
 # Library will automatically lookup the shop ID
 shop = Shop(
@@ -40,7 +40,7 @@ shop = Shop(
 
 ```python
 import os
-from printify import Shop
+from printify_client import Shop
 
 # Set API key in environment
 os.environ['PRINTIFY_API_KEY'] = 'your_api_key_here'
@@ -52,7 +52,7 @@ shop = Shop(shop_id="12345")
 ### Custom Configuration
 
 ```python
-from printify import Shop
+from printify_client import Shop
 
 shop = Shop(
     shop_id="12345",
@@ -169,7 +169,7 @@ print(f"Found {len(disabled_products)} disabled products")
 ### Basic Shipping Calculation
 
 ```python
-from printify import LineItem, Address
+from printify_client import LineItem, Address
 
 # Create line items
 items = [
@@ -211,7 +211,7 @@ for item in shipping.breakdown:
 ### Calculate Shipping to Multiple Destinations
 
 ```python
-from printify import LineItem, Address, ShippingCalculationError
+from printify_client import LineItem, Address, ShippingCalculationError
 
 items = [LineItem(product_id="prod_123", variant_id=456, quantity=1)]
 
@@ -266,7 +266,7 @@ for quantity in [1, 2, 5, 10]:
 ### Create Basic Order
 
 ```python
-from printify import LineItem, Address
+from printify_client import LineItem, Address
 
 # Create line items
 items = [
@@ -322,7 +322,7 @@ print(f"Order {order.id} created with {len(order.line_items)} items")
 ### Batch Order Creation
 
 ```python
-from printify import Shop, LineItem, Address, ValidationError, APIError
+from printify_client import Shop, LineItem, Address, ValidationError, APIError
 
 shop = Shop(shop_id="12345", api_key="your_api_key")
 
@@ -400,7 +400,7 @@ print(f"Items: {len(order.line_items)}")
 ### Handle All Exception Types
 
 ```python
-from printify import (
+from printify_client import (
     Shop,
     AuthenticationError,
     NotFoundError,
@@ -450,7 +450,7 @@ except Exception as e:
 
 ```python
 import time
-from printify import Shop, TimeoutError, APIError
+from printify_client import Shop, TimeoutError, APIError
 
 def get_products_with_retry(shop, max_retries=3, delay=5):
     """Get products with automatic retry on failure."""
@@ -474,7 +474,7 @@ products = get_products_with_retry(shop)
 ### Graceful Degradation
 
 ```python
-from printify import Shop, ShippingCalculationError
+from printify_client import Shop, ShippingCalculationError
 
 shop = Shop(shop_id="12345", api_key="your_api_key")
 
@@ -494,7 +494,7 @@ print(f"Shipping cost: ${shipping_cost:.2f}")
 ### Using Cache Effectively
 
 ```python
-from printify import Shop
+from printify_client import Shop
 
 # Initialize with caching enabled
 shop = Shop(
@@ -570,7 +570,7 @@ for variant in product.enabled_variants:
 
 ```python
 from concurrent.futures import ThreadPoolExecutor
-from printify import Shop
+from printify_client import Shop
 
 shop = Shop(shop_id="12345", api_key="your_api_key")
 
@@ -587,7 +587,7 @@ for product in products:
 ### Custom Address Validation
 
 ```python
-from printify import Address, ValidationError
+from printify_client import Address, ValidationError
 
 def create_validated_address(**kwargs):
     """Create an address with custom validation."""
@@ -627,7 +627,7 @@ except ValidationError as e:
 
 ```python
 import json
-from printify import Shop
+from printify_client import Shop
 
 shop = Shop(shop_id="12345", api_key="your_api_key")
 
@@ -666,7 +666,7 @@ print(f"Exported {len(catalog)} products to product_catalog.json")
 ### Shipping Cost Analysis
 
 ```python
-from printify import Shop, LineItem, Address
+from printify_client import Shop, LineItem, Address
 import statistics
 
 shop = Shop(shop_id="12345", api_key="your_api_key")
@@ -707,7 +707,7 @@ if costs:
 
 ```python
 import os
-from printify import Shop
+from printify_client import Shop
 
 # Good: Use environment variable
 os.environ['PRINTIFY_API_KEY'] = 'your_api_key'
@@ -732,7 +732,7 @@ shop = Shop(
 ### 3. Handle Errors Gracefully
 
 ```python
-from printify import Shop, PrintifyError
+from printify_client import Shop, PrintifyError
 
 try:
     shop = Shop(shop_id="12345", api_key="your_api_key")
@@ -746,7 +746,7 @@ except PrintifyError as e:
 ### 4. Validate Input Before API Calls
 
 ```python
-from printify import LineItem, ValidationError
+from printify_client import LineItem, ValidationError
 
 def create_line_item(product_id, variant_id, quantity):
     """Create a line item with validation."""
@@ -766,7 +766,7 @@ def create_line_item(product_id, variant_id, quantity):
 
 ```python
 from typing import List
-from printify import Shop, Product, LineItem, Address, ShippingCost
+from printify_client import Shop, Product, LineItem, Address, ShippingCost
 
 def calculate_total_cost(
     shop: Shop,

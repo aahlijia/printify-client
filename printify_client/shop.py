@@ -9,16 +9,16 @@ operations including products, orders, and shipping calculations.
 import os
 from typing import Optional, List
 
-from printify.client import APIClient
-from printify.cache import CacheManager
-from printify.models.shop import ShopInfo
-from printify.models.product import Product
-from printify.models.order import Order, LineItem, Address
-from printify.models.shipping import ShippingCost
-from printify.services.product_service import ProductService
-from printify.services.shipping_service import ShippingService
-from printify.services.order_service import OrderService
-from printify.exceptions import ValidationError, NotFoundError
+from printify_client.client import APIClient
+from printify_client.cache import CacheManager
+from printify_client.models.shop import ShopInfo
+from printify_client.models.product import Product
+from printify_client.models.order import Order, LineItem, Address
+from printify_client.models.shipping import ShippingCost
+from printify_client.services.product_service import ProductService
+from printify_client.services.shipping_service import ShippingService
+from printify_client.services.order_service import OrderService
+from printify_client.exceptions import ValidationError, NotFoundError
 
 
 class Shop:
@@ -152,14 +152,25 @@ class Shop:
             >>> info = shop.get_info()
             >>> print(f"Shop: {info.title}")
         """
-        endpoint = f"/shops/{self.shop_id}.json"
+        # Printify API doesn't have a single shop endpoint, so we fetch all shops
+        # and find the one matching our shop_id
+        endpoint = "/shops.json"
         data = self.client.get(endpoint)
         
-        return ShopInfo(
-            id=data.get('id', self.shop_id),
-            title=data.get('title', ''),
-            sales_channel=data.get('sales_channel'),
-        )
+        # API returns list of shops
+        shops = data if isinstance(data, list) else data.get('data', [])
+        
+        # Find shop by ID
+        for shop_data in shops:
+            if str(shop_data.get('id')) == str(self.shop_id):
+                return ShopInfo(
+                    id=shop_data.get('id', self.shop_id),
+                    title=shop_data.get('title', ''),
+                    sales_channel=shop_data.get('sales_channel'),
+                )
+        
+        # Shop not found
+        raise NotFoundError("Shop", self.shop_id)
     
     def _resolve_shop_id(self, shop_name: str) -> str:
         """

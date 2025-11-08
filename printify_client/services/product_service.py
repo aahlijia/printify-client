@@ -7,10 +7,10 @@ operations including fetching, filtering, and caching product data.
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict, Any, Optional
-from printify.client import APIClient
-from printify.cache import CacheManager
-from printify.models import Product, parse_product
-from printify.exceptions import NotFoundError
+from printify_client.client import APIClient
+from printify_client.cache import CacheManager
+from printify_client.models import Product, parse_product
+from printify_client.exceptions import NotFoundError
 
 
 class ProductService:
@@ -148,7 +148,7 @@ class ProductService:
         Fetch multiple pages using ThreadPoolExecutor.
         
         Implements concurrent pagination with 4 workers. Automatically detects
-        when no more pages exist by catching 404 errors.
+        when no more pages exist by catching 404 errors or empty responses.
         
         Returns:
             List of all Product objects from all pages
@@ -168,57 +168,44 @@ class ProductService:
         # Printify typically returns 10-20 items per page
         # We'll continue fetching until we get a 404 or empty response
         if len(first_page_products) > 0:
-            page = 2
+            current_page = 2
             
             # Use ThreadPoolExecutor to fetch multiple pages concurrently
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # Submit initial batch of page requests
-                futures = {}
-                for i in range(max_workers):
-                    future = executor.submit(self._fetch_page, page + i)
-                    futures[future] = page + i
-                
-                # Process completed futures and submit new ones
-                while futures:
-                    # Wait for at least one future to complete
-                    done_futures = []
+                # Keep fetching pages until we hit an empty page or 404
+                while True:
+                    # Submit a batch of page requests
+                    futures = {}
+                    for i in range(max_workers):
+                        future = executor.submit(self._fetch_page, current_page + i)
+                        futures[future] = current_page + i
+                    
+                    # Collect results from this batch
+                    batch_results = {}
                     for future in as_completed(futures):
-                        done_futures.append(future)
                         page_num = futures[future]
                         
                         try:
                             page_products = future.result()
+                            batch_results[page_num] = page_products if page_products else []
                             
-                            if page_products:
-                                products.extend(page_products)
-                                
-                                # Submit next page request
-                                next_page = page_num + max_workers
-                                new_future = executor.submit(self._fetch_page, next_page)
-                                futures[new_future] = next_page
-                            else:
-                                # Empty response means no more pages
-                                # Cancel remaining futures and break
-                                for f in futures:
-                                    if f not in done_futures:
-                                        f.cancel()
-                                break
-                        
-                        except NotFoundError:
-                            # 404 means no more pages
-                            # Cancel remaining futures and break
-                            for f in futures:
-                                if f not in done_futures:
-                                    f.cancel()
-                            break
+                        except (NotFoundError, Exception):
+                            # 404 or any error means this page doesn't exist
+                            batch_results[page_num] = []
                     
-                    # Remove completed futures
-                    for future in done_futures:
-                        del futures[future]
+                    # Add products from successful pages (in order)
+                    has_any_products = False
+                    for page_num in sorted(batch_results.keys()):
+                        if batch_results[page_num]:
+                            products.extend(batch_results[page_num])
+                            has_any_products = True
                     
-                    # If we got a 404 or empty response, stop
-                    if not futures or (done_futures and not page_products):
+                    # If no pages in this batch had products, we're done
+                    if not has_any_products:
                         break
+                    
+                    # Move to the next batch
+                    current_page += max_workers
         
         return products
     
@@ -236,8 +223,8 @@ class ProductService:
             NotFoundError: If the page doesn't exist (404)
         """
         try:
-            endpoint = f"/shops/{self.shop_id}/products.json"
-            data = self.client.get(endpoint, params={"page": page})
+            endpoint = f"/shops/{self.shop_id}/products.json?page={page}"
+            data = self.client.get(endpoint) # , params={"page": page}
             
             # Parse products from response
             # The API returns a 'data' key with the list of products
