@@ -407,7 +407,7 @@ from printify_client import (
     APIError,
     ValidationError,
     ShippingCalculationError,
-    TimeoutError,
+    PrintifyTimeoutError,
     PrintifyError
 )
 
@@ -428,7 +428,7 @@ except ValidationError as e:
     print(f"Validation error: {e}")
     print("Please check your input parameters")
     
-except TimeoutError as e:
+except PrintifyTimeoutError as e:
     print(f"Request timed out: {e}")
     print("Please try again later")
     
@@ -450,14 +450,14 @@ except Exception as e:
 
 ```python
 import time
-from printify_client import Shop, TimeoutError, APIError
+from printify_client import Shop, PrintifyTimeoutError, APIError
 
 def get_products_with_retry(shop, max_retries=3, delay=5):
     """Get products with automatic retry on failure."""
     for attempt in range(max_retries):
         try:
             return shop.get_products()
-        except (TimeoutError, APIError) as e:
+        except (PrintifyTimeoutError, APIError) as e:
             if attempt < max_retries - 1:
                 print(f"Attempt {attempt + 1} failed: {e}")
                 print(f"Retrying in {delay} seconds...")
