@@ -9,8 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    outputs:
-      is_new: ${{ steps.check.outputs.is_new }}
+      actions: write
 
     steps:
     - uses: actions/checkout@v4
@@ -49,10 +48,10 @@ jobs:
         git tag -f "$TAG" "$GITHUB_SHA"
         git push -f origin "refs/tags/$TAG"
 
-  publish:
-    needs: tag
-    if: needs.tag.outputs.is_new == 'true'
-    permissions:
-      id-token: write
-      contents: read
-    uses: ./.github/workflows/publish.yml
+    - name: Publish new version to PyPI
+      if: steps.check.outputs.is_new == 'true'
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG: ${{ steps.version.outputs.tag }}
+      run: |
+        gh workflow run publish.yml --ref "$TAG"
