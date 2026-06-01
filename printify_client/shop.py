@@ -289,9 +289,10 @@ class Shop:
             ShippingCost object with total cost and per-item breakdown
         
         Raises:
+            NotFoundError: If a referenced product does not exist
             ShippingCalculationError: If shipping profile cannot be found
             ValidationError: If input is invalid
-        
+
         Example:
             >>> shop = Shop(shop_id="12345", api_key="your_api_key")
             >>> items = [LineItem(product_id="prod_123", variant_id=456, quantity=2)]
@@ -308,9 +309,13 @@ class Shop:
             >>> shipping = shop.calculate_shipping(items, address)
             >>> print(f"Shipping cost: {shipping}")
         """
-        # Get products for shipping calculation
-        products = self.get_products(include_disabled=True)
-        
+        # Fetch only the products referenced by the line items rather than the
+        # entire catalog, keeping shipping calculation cheap for large shops.
+        product_ids = {item.product_id for item in line_items}
+        products = [
+            self.get_product(product_id) for product_id in product_ids
+        ]
+
         # Delegate to shipping service
         return self.shipping_service.calculate_cost(
             line_items=line_items,
