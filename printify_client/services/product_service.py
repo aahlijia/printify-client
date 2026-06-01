@@ -187,10 +187,12 @@ class ProductService:
                         
                         try:
                             page_products = future.result()
-                            batch_results[page_num] = page_products if page_products else []
-                            
-                        except (NotFoundError, Exception):
-                            # 404 or any error means this page doesn't exist
+                            batch_results[page_num] = page_products or []
+
+                        except NotFoundError:
+                            # 404 means we've reached the end of pagination.
+                            # Any other error (auth, network, parse) is not an
+                            # end-of-pages signal and is allowed to propagate.
                             batch_results[page_num] = []
                     
                     # Add products from successful pages (in order)
