@@ -6,9 +6,9 @@ and validation logic for the Printify API.
 """
 
 from typing import List, Optional
-from datetime import datetime
 
 from printify_client.client import APIClient
+from printify_client.models import parse_order
 from printify_client.models.order import Order, LineItem, Address
 from printify_client.exceptions import ValidationError, APIError
 
@@ -196,58 +196,14 @@ class OrderService:
     def _parse_order_response(self, data: dict) -> Order:
         """
         Parse API response to Order model.
-        
+
+        Delegates to the shared ``parse_order`` helper so order parsing has a
+        single implementation across the library.
+
         Args:
             data: API response data
-        
+
         Returns:
             Order object
         """
-        # Parse line items
-        line_items = []
-        for item_data in data.get('line_items', []):
-            line_items.append(LineItem(
-                product_id=item_data['product_id'],
-                variant_id=item_data['variant_id'],
-                quantity=item_data['quantity'],
-            ))
-        
-        # Parse shipping address
-        address_data = data.get('address_to', {})
-        shipping_address = Address(
-            first_name=address_data.get('first_name', ''),
-            last_name=address_data.get('last_name', ''),
-            email=address_data.get('email', ''),
-            country=address_data.get('country', ''),
-            region=address_data.get('region', ''),
-            city=address_data.get('city', ''),
-            zip_code=address_data.get('zip', ''),
-            address1=address_data.get('address1', ''),
-            address2=address_data.get('address2'),
-            phone=address_data.get('phone'),
-        )
-        
-        # Parse created_at timestamp
-        created_at_str = data.get('created_at', '')
-        try:
-            # Handle ISO format with timezone
-            if created_at_str:
-                # Remove timezone suffix for parsing if present
-                created_at_str = created_at_str.replace('Z', '+00:00')
-                created_at = datetime.fromisoformat(created_at_str)
-            else:
-                created_at = datetime.now()
-        except (ValueError, AttributeError):
-            created_at = datetime.now()
-        
-        # Create Order object
-        order = Order(
-            id=data['id'],
-            external_id=data.get('external_id'),
-            status=data.get('status', 'pending'),
-            created_at=created_at,
-            line_items=line_items,
-            shipping_address=shipping_address,
-        )
-        
-        return order
+        return parse_order(data)

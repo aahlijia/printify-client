@@ -123,12 +123,22 @@ def parse_order(data: Dict[str, Any]) -> 'Order':
     
     line_items = [parse_line_item(item) for item in data.get('line_items', [])]
     shipping_address = parse_address(data.get('address_to', {}))
-    
+
+    created_at_raw = data.get('created_at')
+    try:
+        created_at = (
+            parse_datetime(created_at_raw)
+            if created_at_raw
+            else datetime.now()
+        )
+    except (ValueError, AttributeError):
+        created_at = datetime.now()
+
     return Order(
         id=data['id'],
         external_id=data.get('external_id'),
-        status=data['status'],
-        created_at=parse_datetime(data['created_at']),
+        status=data.get('status', 'pending'),
+        created_at=created_at,
         line_items=line_items,
         shipping_address=shipping_address
     )
@@ -164,16 +174,16 @@ def parse_address(data: Dict[str, Any]) -> 'Address':
         Address model instance
     """
     from printify_client.models.order import Address
-    
+
     return Address(
-        first_name=data['first_name'],
-        last_name=data['last_name'],
-        email=data['email'],
-        country=data['country'],
-        region=data['region'],
-        city=data['city'],
+        first_name=data.get('first_name', ''),
+        last_name=data.get('last_name', ''),
+        email=data.get('email', ''),
+        country=data.get('country', ''),
+        region=data.get('region', ''),
+        city=data.get('city', ''),
         zip_code=data.get('zip', ''),
-        address1=data['address1'],
+        address1=data.get('address1', ''),
         address2=data.get('address2'),
         phone=data.get('phone')
     )
