@@ -128,7 +128,7 @@ from printify_client import (
     APIError,
     ValidationError,
     ShippingCalculationError,
-    TimeoutError
+    PrintifyTimeoutError
 )
 
 # Handle authentication errors
@@ -164,7 +164,7 @@ except APIError as e:
 # Handle timeout errors
 try:
     products = shop.get_products()
-except TimeoutError as e:
+except PrintifyTimeoutError as e:
     print(f"Request timed out: {e}")
     # Consider increasing timeout or retrying
 
@@ -457,7 +457,7 @@ except ShippingCalculationError as e:
 
 #### Timeout Errors
 
-**Problem:** `TimeoutError: Request timed out`
+**Problem:** `PrintifyTimeoutError: Request timed out`
 
 **Solutions:**
 - Check your internet connection
@@ -472,7 +472,7 @@ for attempt in range(max_attempts):
     try:
         products = shop.get_products()
         break
-    except TimeoutError:
+    except PrintifyTimeoutError:
         if attempt < max_attempts - 1:
             print(f"Timeout, retrying in 5 seconds... (attempt {attempt + 1}/{max_attempts})")
             time.sleep(5)
@@ -755,7 +755,7 @@ Raised when input validation fails.
 #### `ShippingCalculationError`
 Raised when shipping cost calculation fails.
 
-#### `TimeoutError`
+#### `PrintifyTimeoutError`
 Raised when API request times out.
 
 ## Requirements

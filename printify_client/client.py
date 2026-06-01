@@ -40,9 +40,9 @@ class APIClient:
         >>> client = APIClient(api_key="your_api_key")
         >>> data = client.get("/shops/12345/products.json")
     """
-    
+
     BASE_URL = "https://api.printify.com/v1"
-    
+
     def __init__(
         self,
         api_key: str,
@@ -64,10 +64,10 @@ class APIClient:
         self.api_key = api_key
         self.timeout = timeout
         self.max_retries = max_retries
-        
+
         # Set up session with connection pooling
         self.session = requests.Session()
-        
+
         # Configure HTTPAdapter with connection pooling
         adapter = HTTPAdapter(
             pool_connections=pool_connections,
@@ -75,14 +75,14 @@ class APIClient:
         )
         self.session.mount("https://", adapter)
         self.session.mount("http://", adapter)
-        
+
         # Configure Bearer token authentication
         self.session.headers.update({
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         })
-    
+
     def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Make GET request to the Printify API.
@@ -104,7 +104,7 @@ class APIClient:
             >>> client.get("/shops/123/products.json", params={"page": 1})
         """
         return self._make_request("GET", endpoint, params=params)
-    
+
     def post(self, endpoint: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Make POST request to the Printify API.
@@ -126,7 +126,7 @@ class APIClient:
             >>> client.post("/shops/123/orders.json", data={"line_items": [...]})
         """
         return self._make_request("POST", endpoint, data=data)
-    
+
     def _make_request(
         self,
         method: str,
@@ -157,7 +157,7 @@ class APIClient:
         """
         url = f"{self.BASE_URL}{endpoint}"
         backoff_delays = [0.3, 0.6, 1.2]
-        
+
         for attempt in range(self.max_retries + 1):
             try:
                 # Make the HTTP request
@@ -168,42 +168,42 @@ class APIClient:
                     json=data,
                     timeout=self.timeout,
                 )
-                
+
                 # Handle authentication errors immediately (don't retry)
                 if response.status_code == 401:
                     raise AuthenticationError(
                         "Invalid API key. Please check your Printify API key."
                     )
-                
+
                 # Handle not found errors immediately (don't retry)
                 if response.status_code == 404:
                     raise NotFoundError("Resource", endpoint)
-                
+
                 # Check if we should retry this status code
                 if self._should_retry(response.status_code) and attempt < self.max_retries:
                     time.sleep(backoff_delays[attempt])
                     continue
-                
+
                 # Raise for other HTTP errors
                 if not response.ok:
                     error_message = "Request failed"
                     error_response = None
-                    
+
                     try:
                         error_response = response.json()
                         error_message = error_response.get("message", error_message)
                     except Exception:
                         error_message = response.text or error_message
-                    
+
                     raise APIError(
                         status_code=response.status_code,
                         message=error_message,
                         response=error_response,
                     )
-                
+
                 # Success - return parsed JSON
                 return response.json()
-            
+
             except (
                 requests.exceptions.Timeout,
                 requests.exceptions.ConnectionError,
@@ -221,22 +221,22 @@ class APIClient:
                     )
                 raise APIError(
                     status_code=0,
-                    message=f"Request failed: {str(e)}",
+                    message=f"Request failed: {e!s}",
                 )
 
             except requests.exceptions.RequestException as e:
                 # Other request exceptions are not generally transient
                 raise APIError(
                     status_code=0,
-                    message=f"Request failed: {str(e)}",
+                    message=f"Request failed: {e!s}",
                 )
-        
+
         # Should never reach here, but just in case
         raise APIError(
             status_code=0,
             message="Request failed after all retry attempts",
         )
-    
+
     def _should_retry(self, status_code: int) -> bool:
         """
         Determine if a request should be retried based on status code.

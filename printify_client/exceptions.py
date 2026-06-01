@@ -30,7 +30,7 @@ class AuthenticationError(PrintifyError):
     Example:
         >>> raise AuthenticationError("Invalid API key provided")
     """
-    
+
     def __init__(self, message: str = "Authentication failed. Please check your API key."):
         super().__init__(message)
         self.message = message
@@ -55,7 +55,7 @@ class NotFoundError(PrintifyError):
         >>> raise NotFoundError("Product", "prod_123")
         NotFoundError: Product not found: prod_123
     """
-    
+
     def __init__(self, resource_type: str, identifier: str):
         message = f"{resource_type} not found: {identifier}"
         super().__init__(message)
@@ -85,7 +85,7 @@ class APIError(PrintifyError):
         >>> raise APIError(500, "Internal server error", {"error": "Database connection failed"})
         APIError: API Error 500: Internal server error
     """
-    
+
     def __init__(self, status_code: int, message: str, response: Optional[Dict[str, Any]] = None):
         error_message = f"API Error {status_code}: {message}"
         super().__init__(error_message)

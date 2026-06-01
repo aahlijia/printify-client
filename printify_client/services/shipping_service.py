@@ -35,7 +35,7 @@ class ShippingService:
         >>> cost = service.calculate_cost(line_items, address, products)
         >>> print(f"Total shipping: {cost}")
     """
-    
+
     def __init__(self, client: APIClient, cache_manager: CacheManager):
         """
         Initialize the shipping service.
@@ -46,7 +46,7 @@ class ShippingService:
         """
         self.client = client
         self.cache = cache_manager
-    
+
     def calculate_cost(
         self,
         line_items: List[LineItem],
@@ -80,17 +80,17 @@ class ShippingService:
         """
         # Create product lookup map
         product_map = {p.id: p for p in products}
-        
+
         # Group items by blueprint/provider
         groups = self._group_by_blueprint_provider(line_items, product_map)
-        
+
         # Fetch shipping profiles concurrently
         profiles = self._fetch_profiles_concurrently(groups, address)
-        
+
         # Calculate costs for each item
         breakdown = []
         total_cost = Decimal('0')
-        
+
         for item in line_items:
             # Get product info
             product = product_map.get(item.product_id)
@@ -98,28 +98,28 @@ class ShippingService:
                 raise ShippingCalculationError(
                     f"Product {item.product_id} not found in provided products list"
                 )
-            
+
             # Find matching profile
             profile = self._find_profile(item, product, profiles, address.country)
-            
+
             # Calculate cost for this item
             item_cost = self._calculate_item_cost(item, profile, address.country)
-            
+
             breakdown.append(ShippingBreakdown(
                 product_id=item.product_id,
                 variant_id=item.variant_id,
                 quantity=item.quantity,
                 cost=item_cost
             ))
-            
+
             total_cost += item_cost
-        
+
         return ShippingCost(
             cost=total_cost,
             currency="USD",
             breakdown=breakdown
         )
-    
+
     def _group_by_blueprint_provider(
         self,
         line_items: List[LineItem],
@@ -142,18 +142,18 @@ class ShippingService:
             ShippingCalculationError: If product not found in product_map
         """
         groups = set()
-        
+
         for item in line_items:
             product = product_map.get(item.product_id)
             if not product:
                 raise ShippingCalculationError(
                     f"Product {item.product_id} not found in provided products list"
                 )
-            
+
             groups.add((product.blueprint_id, product.print_provider_id))
-        
+
         return list(groups)
-    
+
     def _fetch_profiles_concurrently(
         self,
         groups: List[Tuple[int, int]],
@@ -173,7 +173,7 @@ class ShippingService:
             Dictionary mapping (blueprint_id, print_provider_id) to profile data
         """
         profiles = {}
-        
+
         with ThreadPoolExecutor(max_workers=5) as executor:
             # Submit all fetch tasks
             future_to_group = {
@@ -185,7 +185,7 @@ class ShippingService:
                 ): (blueprint_id, print_provider_id)
                 for blueprint_id, print_provider_id in groups
             }
-            
+
             # Collect results as they complete
             for future in as_completed(future_to_group):
                 group = future_to_group[future]
@@ -197,11 +197,11 @@ class ShippingService:
                     blueprint_id, print_provider_id = group
                     raise ShippingCalculationError(
                         f"Failed to fetch shipping profile for blueprint {blueprint_id}, "
-                        f"provider {print_provider_id}: {str(e)}"
+                        f"provider {print_provider_id}: {e!s}"
                     )
-        
+
         return profiles
-    
+
     def _get_shipping_profile(
         self,
         blueprint_id: int,
@@ -226,27 +226,27 @@ class ShippingService:
             ShippingCalculationError: If profile cannot be fetched
         """
         cache_key = f"shipping_profile_{blueprint_id}_{print_provider_id}_{country}"
-        
+
         # Check cache first
         if (cached := self.cache.get(cache_key)) is not None:
             return cached
-        
+
         # Fetch from API
         endpoint = f"/catalog/blueprints/{blueprint_id}/print_providers/{print_provider_id}/shipping.json"
-        
+
         try:
             response = self.client.get(endpoint)
-            
+
             # Cache the result
             self.cache.set(cache_key, response)
-            
+
             return response
         except Exception as e:
             raise ShippingCalculationError(
                 f"Failed to fetch shipping profile for blueprint {blueprint_id}, "
-                f"provider {print_provider_id}: {str(e)}"
+                f"provider {print_provider_id}: {e!s}"
             )
-    
+
     def _find_profile(
         self,
         item: LineItem,
@@ -274,52 +274,52 @@ class ShippingService:
         """
         key = (product.blueprint_id, product.print_provider_id)
         profile_data = profiles.get(key)
-        
+
         if not profile_data:
             raise ShippingCalculationError(
                 f"No shipping profile found for product {product.id} "
                 f"(blueprint {product.blueprint_id}, provider {product.print_provider_id})"
             )
-        
+
         # The API returns profiles in a 'profiles' array
         # Each profile has 'variant_ids' array with variant IDs
         if 'profiles' not in profile_data:
             raise ShippingCalculationError(
                 f"Invalid shipping profile response for product {product.id}"
             )
-        
+
         # Find profile that includes this variant and covers the destination country
         matching_profiles = []
         for profile in profile_data['profiles']:
             # Check if variant is in this profile
             if 'variant_ids' in profile and item.variant_id in profile['variant_ids']:
                 matching_profiles.append(profile)
-        
+
         if not matching_profiles:
             raise ShippingCalculationError(
                 f"No shipping profile found for variant {item.variant_id} "
                 f"of product {product.id}"
             )
-        
+
         # Find the profile that covers the destination country
         # Try exact country match first, then REST_OF_THE_WORLD
         for profile in matching_profiles:
             countries = profile.get('countries', [])
             if country in countries:
                 return profile
-        
+
         # Fallback to REST_OF_THE_WORLD
         for profile in matching_profiles:
             countries = profile.get('countries', [])
             if 'REST_OF_THE_WORLD' in countries:
                 return profile
-        
+
         # If no country match found, raise error
         raise ShippingCalculationError(
             f"No shipping profile found for variant {item.variant_id} "
             f"of product {product.id} shipping to {country}"
         )
-    
+
     def _calculate_item_cost(
         self,
         item: LineItem,
@@ -364,7 +364,7 @@ class ShippingService:
             raise ShippingCalculationError(
                 f"Invalid shipping cost data in profile: {e}"
             )
-        
+
         # Calculate total cost
         if item.quantity == 1:
             return first_item_cost

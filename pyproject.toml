@@ -49,6 +49,9 @@ Issues = "https://github.com/printify/printify-client/issues"
 [tool.setuptools]
 packages = ["printify_client", "printify_client.models", "printify_client.services"]
 
+[tool.setuptools.package-data]
+printify_client = ["py.typed"]
+
 [tool.setuptools.dynamic]
 version = {attr = "printify_client.__version__"}
 

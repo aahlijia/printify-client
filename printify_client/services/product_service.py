@@ -31,7 +31,7 @@ class ProductService:
         >>> products = service.get_all_products()
         >>> product = service.get_product_by_id("prod_123")
     """
-    
+
     def __init__(self, client: APIClient, shop_id: str, cache_manager: CacheManager):
         """
         Initialize the product service.
@@ -44,7 +44,7 @@ class ProductService:
         self.client = client
         self.shop_id = shop_id
         self.cache = cache_manager
-    
+
     def get_all_products(self, include_disabled: bool = False) -> List[Product]:
         """
         Fetch all products with concurrent pagination.
@@ -64,23 +64,23 @@ class ProductService:
             >>> all_products = service.get_all_products(include_disabled=True)
         """
         cache_key = f"products_{self.shop_id}_{include_disabled}"
-        
+
         # Check cache first
         if (cached := self.cache.get(cache_key)) is not None:
             return cached
-        
+
         # Fetch products with concurrent pagination
         products = self._fetch_pages_concurrently()
-        
+
         # Filter out products without enabled variants unless explicitly requested
         if not include_disabled:
             products = [p for p in products if p.enabled_variants]
-        
+
         # Cache the results
         self.cache.set(cache_key, products)
-        
+
         return products
-    
+
     def get_product_by_id(self, product_id: str) -> Product:
         """
         Fetch single product by ID.
@@ -98,21 +98,21 @@ class ProductService:
             >>> product = service.get_product_by_id("prod_123")
         """
         cache_key = f"product_{self.shop_id}_{product_id}"
-        
+
         # Check cache first
         if (cached := self.cache.get(cache_key)) is not None:
             return cached
-        
+
         # Fetch from API
         endpoint = f"/shops/{self.shop_id}/products/{product_id}.json"
         data = self.client.get(endpoint)
-        
+
         # Parse and cache
         product = self._parse_product(data)
         self.cache.set(cache_key, product)
-        
+
         return product
-    
+
     def filter_products(self, **filters) -> List[Product]:
         """
         Filter products by attributes.
@@ -132,7 +132,7 @@ class ProductService:
         """
         # Get all products (this will use cache if available)
         products = self.get_all_products()
-        
+
         # Apply filters
         filtered = products
         for key, value in filters.items():
@@ -140,9 +140,9 @@ class ProductService:
                 p for p in filtered
                 if hasattr(p, key) and getattr(p, key) == value
             ]
-        
+
         return filtered
-    
+
     def _fetch_pages_concurrently(self) -> List[Product]:
         """
         Fetch all product pages using Printify's pagination metadata.
@@ -216,7 +216,7 @@ class ProductService:
         """
         data = self._fetch_page_data(page)
         return [self._parse_product(p) for p in data.get('data', [])]
-    
+
     def _parse_product(self, data: Dict[str, Any]) -> Product:
         """
         Convert API response to Product model.

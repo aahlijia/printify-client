@@ -19,7 +19,7 @@ class LineItem:
     product_id: str
     variant_id: int
     quantity: int
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert to API request format.
@@ -32,7 +32,7 @@ class LineItem:
             'variant_id': self.variant_id,
             'quantity': self.quantity
         }
-    
+
     def __str__(self) -> str:
         """String representation for debugging."""
         return f"LineItem(product={self.product_id}, variant={self.variant_id}, qty={self.quantity})"
@@ -65,7 +65,7 @@ class Address:
     address1: str
     address2: Optional[str] = None
     phone: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """
         Convert to API request format.
@@ -83,14 +83,14 @@ class Address:
             'zip': self.zip_code,
             'address1': self.address1
         }
-        
+
         if self.address2:
             data['address2'] = self.address2
         if self.phone:
             data['phone'] = self.phone
-        
+
         return data
-    
+
     def __str__(self) -> str:
         """String representation for debugging."""
         return f"{self.first_name} {self.last_name}, {self.city}, {self.region} {self.zip_code}, {self.country}"
@@ -115,7 +115,7 @@ class Order:
     created_at: datetime
     line_items: List[LineItem]
     shipping_address: Address
-    
+
     @property
     def is_pending(self) -> bool:
         """
@@ -125,7 +125,7 @@ class Order:
             True if order status is "pending", False otherwise
         """
         return self.status == 'pending'
-    
+
     def __str__(self) -> str:
         """String representation for debugging."""
         item_count = sum(item.quantity for item in self.line_items)

@@ -10,7 +10,7 @@ from printify_client.services.shipping_service import ShippingService
 from printify_client.services.order_service import OrderService
 
 __all__ = [
+    'OrderService',
     'ProductService',
     'ShippingService',
-    'OrderService',
 ]

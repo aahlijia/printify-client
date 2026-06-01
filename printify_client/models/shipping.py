@@ -21,7 +21,7 @@ class ShippingBreakdown:
     variant_id: int
     quantity: int
     cost: Decimal
-    
+
     def __str__(self) -> str:
         """String representation for debugging."""
         return f"ShippingBreakdown(product={self.product_id}, variant={self.variant_id}, qty={self.quantity}, cost=${self.cost:.2f})"
@@ -40,7 +40,7 @@ class ShippingCost:
     cost: Decimal
     currency: str
     breakdown: List[ShippingBreakdown]
-    
+
     def __str__(self) -> str:
         """String representation for debugging."""
         return f"{self.cost:.2f} {self.currency}"

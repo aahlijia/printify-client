@@ -60,7 +60,7 @@ def parse_product(data: Dict[str, Any]) -> 'Product':
     """
     variants = [parse_variant(v) for v in data.get('variants', [])]
     images = [parse_image(i) for i in data.get('images', [])]
-    
+
     return Product(
         id=data['id'],
         title=data['title'],
@@ -193,7 +193,7 @@ def parse_shipping_cost(data: Dict[str, Any]) -> 'ShippingCost':
         ShippingCost model instance
     """
     breakdown = [parse_shipping_breakdown(item) for item in data.get('breakdown', [])]
-    
+
     return ShippingCost(
         cost=cents_to_decimal(data['cost']),
         currency=data.get('currency', 'USD'),

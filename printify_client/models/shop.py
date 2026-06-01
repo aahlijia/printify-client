@@ -18,7 +18,7 @@ class ShopInfo:
     id: str
     title: str
     sales_channel: Optional[str] = None
-    
+
     def __str__(self) -> str:
         """String representation for debugging."""
         channel_info = f" ({self.sales_channel})" if self.sales_channel else ""

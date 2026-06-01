@@ -29,7 +29,7 @@ class OrderService:
         >>> service = OrderService(client, shop_id="12345")
         >>> order = service.create_order(line_items, address)
     """
-    
+
     def __init__(self, client: APIClient, shop_id: str):
         """
         Initialize the OrderService.
@@ -40,7 +40,7 @@ class OrderService:
         """
         self.client = client
         self.shop_id = shop_id
-    
+
     def create_order(
         self,
         line_items: List[LineItem],
@@ -87,7 +87,7 @@ class OrderService:
         """
         # Validate required fields
         self._validate_order_input(line_items, shipping_address)
-        
+
         # Build API request payload
         payload = self._build_order_payload(
             line_items=line_items,
@@ -96,10 +96,10 @@ class OrderService:
             label=label,
             send_notification=send_notification,
         )
-        
+
         # Make POST request to create order
         endpoint = f"/shops/{self.shop_id}/orders.json"
-        
+
         try:
             response_data = self.client.post(endpoint, data=payload)
         except APIError as e:
@@ -109,12 +109,12 @@ class OrderService:
                 message=f"Failed to create order: {e.message}",
                 response=e.response,
             )
-        
+
         # Parse API response to Order model
         order = self._parse_order_response(response_data)
-        
+
         return order
-    
+
     def _validate_order_input(
         self,
         line_items: List[LineItem],
@@ -133,7 +133,7 @@ class OrderService:
         # Validate line items
         if not line_items:
             raise ValidationError("At least one line item is required to create an order")
-        
+
         for item in line_items:
             if not item.product_id:
                 raise ValidationError("Line item product_id is required")
@@ -141,7 +141,7 @@ class OrderService:
                 raise ValidationError("Line item variant_id is required")
             if item.quantity <= 0:
                 raise ValidationError("Line item quantity must be greater than 0")
-        
+
         # Validate shipping address required fields
         required_address_fields = [
             ('first_name', shipping_address.first_name),
@@ -153,11 +153,11 @@ class OrderService:
             ('zip_code', shipping_address.zip_code),
             ('address1', shipping_address.address1),
         ]
-        
+
         for field_name, field_value in required_address_fields:
             if not field_value or (isinstance(field_value, str) and not field_value.strip()):
                 raise ValidationError(f"Shipping address {field_name} is required")
-    
+
     def _build_order_payload(
         self,
         line_items: List[LineItem],
@@ -184,15 +184,15 @@ class OrderService:
             'address_to': shipping_address.to_dict(),
             'send_notification': send_notification,
         }
-        
+
         if external_id:
             payload['external_id'] = external_id
-        
+
         if label:
             payload['label'] = label
-        
+
         return payload
-    
+
     def _parse_order_response(self, data: dict) -> Order:
         """
         Parse API response to Order model.

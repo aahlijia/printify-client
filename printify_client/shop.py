@@ -55,7 +55,7 @@ class Shop:
         >>> # Get products
         >>> products = shop.get_products()
     """
-    
+
     def __init__(
         self,
         shop_id: Optional[str] = None,
@@ -84,20 +84,20 @@ class Shop:
             raise ValidationError(
                 "Either shop_id or shop_name must be provided"
             )
-        
+
         # Load API key from environment variable if not provided
         if api_key is None:
             api_key = os.environ.get('PRINTIFY_API_KEY')
-        
+
         if not api_key:
             raise ValidationError(
                 "API key must be provided either as parameter or via "
                 "PRINTIFY_API_KEY environment variable"
             )
-        
+
         # Initialize API client
         self.client = APIClient(api_key=api_key)
-        
+
         # Initialize cache manager if enabled
         self.cache_manager: Optional[CacheManager] = None
         if enable_cache:
@@ -105,33 +105,33 @@ class Shop:
         else:
             # Create a no-op cache manager
             self.cache_manager = CacheManager(ttl=0, max_size=0)
-        
+
         # Resolve shop_id from shop_name if needed
         if shop_name and not shop_id:
             shop_id = self._resolve_shop_id(shop_name)
-        
+
         self.shop_id = shop_id
-        
+
         # Validate shop exists by fetching shop info
         self._shop_info = self.get_info()
-        
+
         # Initialize services
         self.product_service = ProductService(
             client=self.client,
             shop_id=self.shop_id,
             cache_manager=self.cache_manager,
         )
-        
+
         self.shipping_service = ShippingService(
             client=self.client,
             cache_manager=self.cache_manager,
         )
-        
+
         self.order_service = OrderService(
             client=self.client,
             shop_id=self.shop_id,
         )
-    
+
     def get_info(self) -> ShopInfo:
         """
         Retrieve shop information and metadata.
@@ -156,10 +156,10 @@ class Shop:
         # and find the one matching our shop_id
         endpoint = "/shops.json"
         data = self.client.get(endpoint)
-        
+
         # API returns list of shops
         shops = data if isinstance(data, list) else data.get('data', [])
-        
+
         # Find shop by ID
         for shop_data in shops:
             if str(shop_data.get('id')) == str(self.shop_id):
@@ -168,10 +168,10 @@ class Shop:
                     title=shop_data.get('title', ''),
                     sales_channel=shop_data.get('sales_channel'),
                 )
-        
+
         # Shop not found
         raise NotFoundError("Shop", self.shop_id)
-    
+
     def _resolve_shop_id(self, shop_name: str) -> str:
         """
         Lookup shop ID from shop name.
@@ -195,19 +195,19 @@ class Shop:
         """
         endpoint = "/shops.json"
         data = self.client.get(endpoint)
-        
+
         # API returns list of shops
         shops = data if isinstance(data, list) else data.get('data', [])
-        
+
         # Find shop by name (case-insensitive)
         shop_name_lower = shop_name.lower()
         for shop_data in shops:
             if shop_data.get('title', '').lower() == shop_name_lower:
                 return shop_data['id']
-        
+
         # Shop not found
         raise NotFoundError("Shop", shop_name)
-    
+
     def get_products(self, include_disabled: bool = False) -> List[Product]:
         """
         Retrieve all products from the shop.
@@ -228,7 +228,7 @@ class Shop:
             ...     print(f"{product.title}: ${product.price_range[0]}")
         """
         return self.product_service.get_all_products(include_disabled=include_disabled)
-    
+
     def get_product(self, product_id: str) -> Product:
         """
         Retrieve a single product by ID.
@@ -248,7 +248,7 @@ class Shop:
             >>> print(f"Product: {product.title}")
         """
         return self.product_service.get_product_by_id(product_id)
-    
+
     def filter_products(self, **filters) -> List[Product]:
         """
         Filter products by attributes.
@@ -268,7 +268,7 @@ class Shop:
             >>> custom_products = shop.filter_products(title="Custom Design")
         """
         return self.product_service.filter_products(**filters)
-    
+
     def calculate_shipping(
         self,
         line_items: List[LineItem],
@@ -322,7 +322,7 @@ class Shop:
             address=address,
             products=products,
         )
-    
+
     def create_order(
         self,
         line_items: List[LineItem],
@@ -375,7 +375,7 @@ class Shop:
             label=label,
             send_notification=send_notification,
         )
-    
+
     def clear_cache(self) -> None:
         """
         Clear all cached data for this shop.
