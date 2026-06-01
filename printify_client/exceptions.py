@@ -122,14 +122,18 @@ class ShippingCalculationError(PrintifyError):
     pass
 
 
-class TimeoutError(PrintifyError):
+class PrintifyTimeoutError(PrintifyError):
     """
     Raised when API request times out.
-    
+
     This exception is raised when a request to the Printify API
     exceeds the configured timeout threshold.
-    
+
+    Note:
+        Named ``PrintifyTimeoutError`` to avoid shadowing the built-in
+        ``TimeoutError``.
+
     Example:
-        >>> raise TimeoutError("Request timed out after 20 seconds")
+        >>> raise PrintifyTimeoutError("Request timed out after 20 seconds")
     """
     pass

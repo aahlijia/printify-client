@@ -3,7 +3,12 @@ Data models for Printify API responses.
 """
 from decimal import Decimal
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
+
+from printify_client.models.product import Product, Variant, Image
+from printify_client.models.order import Order, LineItem, Address
+from printify_client.models.shipping import ShippingCost, ShippingBreakdown
+from printify_client.models.shop import ShopInfo
 
 
 def cents_to_decimal(cents: int) -> Decimal:
@@ -53,8 +58,6 @@ def parse_product(data: Dict[str, Any]) -> 'Product':
     Returns:
         Product model instance
     """
-    from printify_client.models.product import Product, Variant, Image
-    
     variants = [parse_variant(v) for v in data.get('variants', [])]
     images = [parse_image(i) for i in data.get('images', [])]
     
@@ -79,8 +82,6 @@ def parse_variant(data: Dict[str, Any]) -> 'Variant':
     Returns:
         Variant model instance
     """
-    from printify_client.models.product import Variant
-    
     return Variant(
         id=data['id'],
         title=data['title'],
@@ -99,8 +100,6 @@ def parse_image(data: Dict[str, Any]) -> 'Image':
     Returns:
         Image model instance
     """
-    from printify_client.models.product import Image
-    
     return Image(
         src=data['src'],
         variant_ids=data.get('variant_ids', []),
@@ -119,8 +118,6 @@ def parse_order(data: Dict[str, Any]) -> 'Order':
     Returns:
         Order model instance
     """
-    from printify_client.models.order import Order, LineItem, Address
-    
     line_items = [parse_line_item(item) for item in data.get('line_items', [])]
     shipping_address = parse_address(data.get('address_to', {}))
 
@@ -154,8 +151,6 @@ def parse_line_item(data: Dict[str, Any]) -> 'LineItem':
     Returns:
         LineItem model instance
     """
-    from printify_client.models.order import LineItem
-    
     return LineItem(
         product_id=data['product_id'],
         variant_id=data['variant_id'],
@@ -173,8 +168,6 @@ def parse_address(data: Dict[str, Any]) -> 'Address':
     Returns:
         Address model instance
     """
-    from printify_client.models.order import Address
-
     return Address(
         first_name=data.get('first_name', ''),
         last_name=data.get('last_name', ''),
@@ -199,8 +192,6 @@ def parse_shipping_cost(data: Dict[str, Any]) -> 'ShippingCost':
     Returns:
         ShippingCost model instance
     """
-    from printify_client.models.shipping import ShippingCost, ShippingBreakdown
-    
     breakdown = [parse_shipping_breakdown(item) for item in data.get('breakdown', [])]
     
     return ShippingCost(
@@ -220,8 +211,6 @@ def parse_shipping_breakdown(data: Dict[str, Any]) -> 'ShippingBreakdown':
     Returns:
         ShippingBreakdown model instance
     """
-    from printify_client.models.shipping import ShippingBreakdown
-    
     return ShippingBreakdown(
         product_id=data['product_id'],
         variant_id=data['variant_id'],
@@ -240,20 +229,11 @@ def parse_shop_info(data: Dict[str, Any]) -> 'ShopInfo':
     Returns:
         ShopInfo model instance
     """
-    from printify_client.models.shop import ShopInfo
-    
     return ShopInfo(
         id=data['id'],
         title=data['title'],
         sales_channel=data.get('sales_channel')
     )
-
-
-# Import all models for easy access
-from printify_client.models.product import Product, Variant, Image
-from printify_client.models.order import Order, LineItem, Address
-from printify_client.models.shipping import ShippingCost, ShippingBreakdown
-from printify_client.models.shop import ShopInfo
 
 
 # Export all models and utilities

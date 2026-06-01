@@ -4,10 +4,10 @@ import json
 from decimal import Decimal
 from pathlib import Path
 
-from printify_client.models.product import Product, Variant, Image
-from printify_client.models.order import LineItem, Address, Order
+from printify_client.models.product import Product, Variant
+from printify_client.models.order import LineItem, Address
 from printify_client.models.shipping import ShippingCost, ShippingBreakdown
-from printify_client.models import parse_product, parse_variant, parse_image
+from printify_client.models import parse_product, parse_variant
 
 
 # Load test fixtures

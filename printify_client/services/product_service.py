@@ -6,7 +6,7 @@ operations including fetching, filtering, and caching product data.
 """
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from printify_client.client import APIClient
 from printify_client.cache import CacheManager
 from printify_client.models import Product, parse_product

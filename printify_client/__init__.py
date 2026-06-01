@@ -58,7 +58,7 @@ from printify_client.exceptions import (
     APIError,
     ValidationError,
     ShippingCalculationError,
-    TimeoutError,
+    PrintifyTimeoutError,
 )
 
 # Explicit exports for better IDE support and documentation
@@ -87,5 +87,5 @@ __all__ = [
     "APIError",
     "ValidationError",
     "ShippingCalculationError",
-    "TimeoutError",
+    "PrintifyTimeoutError",
 ]

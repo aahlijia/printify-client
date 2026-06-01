@@ -3,8 +3,7 @@
 import json
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import Mock, MagicMock
-import responses
+from unittest.mock import Mock
 
 from printify_client.services.product_service import ProductService
 from printify_client.services.shipping_service import ShippingService

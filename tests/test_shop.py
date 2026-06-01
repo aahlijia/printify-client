@@ -8,7 +8,7 @@ import responses
 
 from printify_client.shop import Shop
 from printify_client.models.order import LineItem, Address
-from printify_client.exceptions import ValidationError, AuthenticationError, NotFoundError
+from printify_client.exceptions import ValidationError, NotFoundError
 
 
 # Load test fixtures
@@ -400,20 +400,20 @@ def test_shop_clear_cache():
     shop = Shop(shop_id="shop_123", api_key="test_api_key", enable_cache=True)
     
     # First call - should hit API
-    products1 = shop.get_products()
+    shop.get_products()
     call_count_1 = len([c for c in responses.calls if 'products.json' in c.request.url])
-    
+
     # Second call - should use cache
-    products2 = shop.get_products()
+    shop.get_products()
     call_count_2 = len([c for c in responses.calls if 'products.json' in c.request.url])
-    
+
     assert call_count_1 == call_count_2  # No new API call
-    
+
     # Clear cache
     shop.clear_cache()
-    
+
     # Third call - should hit API again
-    products3 = shop.get_products()
+    shop.get_products()
     call_count_3 = len([c for c in responses.calls if 'products.json' in c.request.url])
     
     assert call_count_3 == call_count_2 + 1  # New API call after cache clear
@@ -450,11 +450,11 @@ def test_shop_caching_disabled():
     shop = Shop(shop_id="shop_123", api_key="test_api_key", enable_cache=False)
     
     # First call
-    products1 = shop.get_products()
+    shop.get_products()
     call_count_1 = len([c for c in responses.calls if 'products.json' in c.request.url])
-    
+
     # Second call - should NOT use cache
-    products2 = shop.get_products()
+    shop.get_products()
     call_count_2 = len([c for c in responses.calls if 'products.json' in c.request.url])
     
     # With caching disabled, should make a new API call

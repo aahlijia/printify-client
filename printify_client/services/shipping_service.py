@@ -8,7 +8,7 @@ first-item and additional-items pricing rules.
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from decimal import Decimal
-from typing import Dict, List, Tuple, Any, Optional
+from typing import Dict, List, Tuple, Any
 
 from printify_client.client import APIClient
 from printify_client.cache import CacheManager
@@ -345,16 +345,25 @@ class ShippingService:
             ShippingCalculationError: If cost data is missing
         """
         # Extract first-item and additional-items costs (in cents)
-        first_item_data = profile.get('first_item', {})
-        additional_items_data = profile.get('additional_items', {})
-        
-        if not first_item_data or 'cost' not in first_item_data:
+        first_item_data = profile.get('first_item') or {}
+        additional_items_data = profile.get('additional_items') or {}
+
+        first_cost_raw = first_item_data.get('cost')
+        if first_cost_raw is None:
             raise ShippingCalculationError(
-                f"Missing first_item cost data in shipping profile"
+                "Missing first_item cost data in shipping profile"
             )
-        
-        first_item_cost = Decimal(first_item_data['cost']) / 100
-        additional_item_cost = Decimal(additional_items_data.get('cost', 0)) / 100
+
+        # Default to 0 when additional cost is absent or null
+        additional_cost_raw = additional_items_data.get('cost') or 0
+
+        try:
+            first_item_cost = Decimal(first_cost_raw) / 100
+            additional_item_cost = Decimal(additional_cost_raw) / 100
+        except (ArithmeticError, TypeError, ValueError) as e:
+            raise ShippingCalculationError(
+                f"Invalid shipping cost data in profile: {e}"
+            )
         
         # Calculate total cost
         if item.quantity == 1:

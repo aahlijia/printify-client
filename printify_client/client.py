@@ -9,13 +9,12 @@ import time
 from typing import Dict, Optional, Any
 import requests
 from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 from printify_client.exceptions import (
     AuthenticationError,
     NotFoundError,
     APIError,
-    TimeoutError as PrintifyTimeoutError,
+    PrintifyTimeoutError,
 )
 
 
@@ -205,25 +204,32 @@ class APIClient:
                 # Success - return parsed JSON
                 return response.json()
             
-            except requests.exceptions.Timeout:
-                # Retry on timeout if we have attempts left
+            except (
+                requests.exceptions.Timeout,
+                requests.exceptions.ConnectionError,
+            ) as e:
+                # Transient network errors - retry with backoff if attempts
+                # remain.
                 if attempt < self.max_retries:
                     time.sleep(backoff_delays[attempt])
                     continue
-                
-                # Out of retries - raise timeout error
-                raise PrintifyTimeoutError(
-                    f"Request timed out after {self.timeout} seconds"
-                )
-            
-            except requests.exceptions.RequestException as e:
-                # Handle other request exceptions
-                # Don't retry these - they're usually not transient
-                if not isinstance(e, requests.exceptions.Timeout):
-                    raise APIError(
-                        status_code=0,
-                        message=f"Request failed: {str(e)}",
+
+                # Out of retries - surface the appropriate error
+                if isinstance(e, requests.exceptions.Timeout):
+                    raise PrintifyTimeoutError(
+                        f"Request timed out after {self.timeout} seconds"
                     )
+                raise APIError(
+                    status_code=0,
+                    message=f"Request failed: {str(e)}",
+                )
+
+            except requests.exceptions.RequestException as e:
+                # Other request exceptions are not generally transient
+                raise APIError(
+                    status_code=0,
+                    message=f"Request failed: {str(e)}",
+                )
         
         # Should never reach here, but just in case
         raise APIError(

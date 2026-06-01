@@ -7,7 +7,6 @@ from printify_client.exceptions import (
     AuthenticationError,
     NotFoundError,
     APIError,
-    TimeoutError as PrintifyTimeoutError,
 )
 
 
