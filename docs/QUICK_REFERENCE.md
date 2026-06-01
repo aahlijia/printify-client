@@ -142,7 +142,7 @@ from printify_client import (
     APIError,
     ValidationError,
     ShippingCalculationError,
-    TimeoutError
+    PrintifyTimeoutError
 )
 
 try:
@@ -156,7 +156,7 @@ except ValidationError:
     print("Invalid input")
 except ShippingCalculationError:
     print("Cannot calculate shipping")
-except TimeoutError:
+except PrintifyTimeoutError:
     print("Request timed out")
 except APIError as e:
     print(f"API error: {e.status_code}")

@@ -21,7 +21,7 @@ class Variant:
     title: str
     is_enabled: bool
     price: Decimal
-    
+
     def __str__(self) -> str:
         """String representation for debugging."""
         return f"{self.title} - ${self.price:.2f}"
@@ -42,7 +42,7 @@ class Image:
     variant_ids: List[int]
     position: str
     is_default: bool
-    
+
     def __str__(self) -> str:
         """String representation for debugging."""
         default_marker = " (default)" if self.is_default else ""
@@ -70,7 +70,7 @@ class Product:
     print_provider_id: int
     variants: List[Variant]
     images: List[Image]
-    
+
     @property
     def enabled_variants(self) -> List[Variant]:
         """
@@ -80,7 +80,7 @@ class Product:
             List of variants where is_enabled is True
         """
         return [v for v in self.variants if v.is_enabled]
-    
+
     @property
     def default_image(self) -> Optional[Image]:
         """
@@ -90,7 +90,7 @@ class Product:
             The image marked as default, or None if no default exists
         """
         return next((img for img in self.images if img.is_default), None)
-    
+
     @property
     def price_range(self) -> Tuple[Decimal, Decimal]:
         """
@@ -103,10 +103,10 @@ class Product:
         enabled = self.enabled_variants
         if not enabled:
             return (Decimal('0'), Decimal('0'))
-        
+
         prices = [v.price for v in enabled]
         return (min(prices), max(prices))
-    
+
     def get_variant(self, variant_id: int) -> Optional[Variant]:
         """
         Get variant by ID.
@@ -118,15 +118,15 @@ class Product:
             The matching Variant object, or None if not found
         """
         return next((v for v in self.variants if v.id == variant_id), None)
-    
+
     def __str__(self) -> str:
         """String representation for debugging."""
         min_price, max_price = self.price_range
         enabled_count = len(self.enabled_variants)
-        
+
         if min_price == max_price:
             price_str = f"${min_price:.2f}"
         else:
             price_str = f"${min_price:.2f} - ${max_price:.2f}"
-        
+
         return f"{self.title} ({enabled_count} variants, {price_str})"

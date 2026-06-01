@@ -6,9 +6,9 @@ and validation logic for the Printify API.
 """
 
 from typing import List, Optional
-from datetime import datetime
 
 from printify_client.client import APIClient
+from printify_client.models import parse_order
 from printify_client.models.order import Order, LineItem, Address
 from printify_client.exceptions import ValidationError, APIError
 
@@ -29,7 +29,7 @@ class OrderService:
         >>> service = OrderService(client, shop_id="12345")
         >>> order = service.create_order(line_items, address)
     """
-    
+
     def __init__(self, client: APIClient, shop_id: str):
         """
         Initialize the OrderService.
@@ -40,7 +40,7 @@ class OrderService:
         """
         self.client = client
         self.shop_id = shop_id
-    
+
     def create_order(
         self,
         line_items: List[LineItem],
@@ -87,7 +87,7 @@ class OrderService:
         """
         # Validate required fields
         self._validate_order_input(line_items, shipping_address)
-        
+
         # Build API request payload
         payload = self._build_order_payload(
             line_items=line_items,
@@ -96,10 +96,10 @@ class OrderService:
             label=label,
             send_notification=send_notification,
         )
-        
+
         # Make POST request to create order
         endpoint = f"/shops/{self.shop_id}/orders.json"
-        
+
         try:
             response_data = self.client.post(endpoint, data=payload)
         except APIError as e:
@@ -109,12 +109,12 @@ class OrderService:
                 message=f"Failed to create order: {e.message}",
                 response=e.response,
             )
-        
+
         # Parse API response to Order model
         order = self._parse_order_response(response_data)
-        
+
         return order
-    
+
     def _validate_order_input(
         self,
         line_items: List[LineItem],
@@ -133,7 +133,7 @@ class OrderService:
         # Validate line items
         if not line_items:
             raise ValidationError("At least one line item is required to create an order")
-        
+
         for item in line_items:
             if not item.product_id:
                 raise ValidationError("Line item product_id is required")
@@ -141,7 +141,7 @@ class OrderService:
                 raise ValidationError("Line item variant_id is required")
             if item.quantity <= 0:
                 raise ValidationError("Line item quantity must be greater than 0")
-        
+
         # Validate shipping address required fields
         required_address_fields = [
             ('first_name', shipping_address.first_name),
@@ -153,11 +153,11 @@ class OrderService:
             ('zip_code', shipping_address.zip_code),
             ('address1', shipping_address.address1),
         ]
-        
+
         for field_name, field_value in required_address_fields:
             if not field_value or (isinstance(field_value, str) and not field_value.strip()):
                 raise ValidationError(f"Shipping address {field_name} is required")
-    
+
     def _build_order_payload(
         self,
         line_items: List[LineItem],
@@ -184,70 +184,26 @@ class OrderService:
             'address_to': shipping_address.to_dict(),
             'send_notification': send_notification,
         }
-        
+
         if external_id:
             payload['external_id'] = external_id
-        
+
         if label:
             payload['label'] = label
-        
+
         return payload
-    
+
     def _parse_order_response(self, data: dict) -> Order:
         """
         Parse API response to Order model.
-        
+
+        Delegates to the shared ``parse_order`` helper so order parsing has a
+        single implementation across the library.
+
         Args:
             data: API response data
-        
+
         Returns:
             Order object
         """
-        # Parse line items
-        line_items = []
-        for item_data in data.get('line_items', []):
-            line_items.append(LineItem(
-                product_id=item_data['product_id'],
-                variant_id=item_data['variant_id'],
-                quantity=item_data['quantity'],
-            ))
-        
-        # Parse shipping address
-        address_data = data.get('address_to', {})
-        shipping_address = Address(
-            first_name=address_data.get('first_name', ''),
-            last_name=address_data.get('last_name', ''),
-            email=address_data.get('email', ''),
-            country=address_data.get('country', ''),
-            region=address_data.get('region', ''),
-            city=address_data.get('city', ''),
-            zip_code=address_data.get('zip', ''),
-            address1=address_data.get('address1', ''),
-            address2=address_data.get('address2'),
-            phone=address_data.get('phone'),
-        )
-        
-        # Parse created_at timestamp
-        created_at_str = data.get('created_at', '')
-        try:
-            # Handle ISO format with timezone
-            if created_at_str:
-                # Remove timezone suffix for parsing if present
-                created_at_str = created_at_str.replace('Z', '+00:00')
-                created_at = datetime.fromisoformat(created_at_str)
-            else:
-                created_at = datetime.now()
-        except (ValueError, AttributeError):
-            created_at = datetime.now()
-        
-        # Create Order object
-        order = Order(
-            id=data['id'],
-            external_id=data.get('external_id'),
-            status=data.get('status', 'pending'),
-            created_at=created_at,
-            line_items=line_items,
-            shipping_address=shipping_address,
-        )
-        
-        return order
+        return parse_order(data)

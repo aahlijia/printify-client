@@ -49,6 +49,9 @@ Issues = "https://github.com/printify/printify-client/issues"
 [tool.setuptools]
 packages = ["printify_client", "printify_client.models", "printify_client.services"]
 
+[tool.setuptools.package-data]
+printify_client = ["py.typed"]
+
 [tool.setuptools.dynamic]
 version = {attr = "printify_client.__version__"}
 
@@ -71,3 +74,111 @@ testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+
+[tool.ruff]
+target-version = 'py312'
+line-length = 79
+indent-width = 4
+extend-exclude = ['docs', 'test', 'tests']
+
+[tool.ruff.lint]
+select = ['F', 'E', 'I']
+dummy-variable-rgx = '^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$'
+extend-select = ['W', 'N', 'ANN', 'B', 'A', 'C4', 'PERF', 'RUF']
+ignore = ['I001', 'N999', 'B905', 'PERF203', 'RUF013']
+fixable = ['ALL']
+unfixable = []
+
+[tool.ruff.lint.isort]
+force-single-line = true
+force-sort-within-sections = false
+lines-after-imports = 2
+known-first-party = []
+known-local-folder = []
+known-third-party = []
+section-order = [
+    'future',
+    'standard-library',
+    'third-party',
+    'first-party',
+    'local-folder',
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pycodestyle]
+ignore-overlong-task-comments = true
+
+[tool.ruff.lint.pydocstyle]
+convention = 'google'
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true
+
+[tool.ruff.format]
+quote-style = 'double'
+indent-style = 'space'
+skip-magic-trailing-comma = false
+line-ending = 'auto'
+preview = false
+docstring-code-format = true
+
+[tool.pyright]
+pythonVersion = '3.12'
+typeCheckingMode = 'basic'
+# enable subset of 'strict'
+reportDuplicateImport = true
+reportInvalidStubStatement = true
+reportOverlappingOverload = true
+reportPropertyTypeMismatch = true
+reportUntypedClassDecorator = false
+reportUntypedFunctionDecorator = false
+reportUntypedNamedTuple = false
+reportUnusedImport = true
+# disable subset of 'basic'
+reportGeneralTypeIssues = false
+reportMissingModuleSource = false
+reportOptionalCall = false
+reportOptionalIterable = false
+reportOptionalMemberAccess = false
+reportOptionalOperand = false
+reportOptionalSubscript = false
+reportPrivateImportUsage = false
+reportUnboundVariable = false
+exclude = ['docs', 'setup.py', 'venv']
+
+[tool.sqlfluff.core]
+output_line_length = 120
+max_line_length = 120
+runaway_limit = 10
+processes = -1
+large_file_skip_byte_limit = 30000
+templater = 'jinja'
+
+[tool.sqlfluff.indentation]
+indent_unit = 'space'
+indent_space_size = 4
+indented_joins = true
+indented_ctes = true
+indented_using_on = true
+
+[tool.sqlfluff.layout.type.comma]
+spacing_before = 'touch'
+line_position = 'leading'
+
+[tool.sqlfluff.rules.capitalisation.keywords]
+capitalisation_policy = 'lower'
+extended_capitalisation_policy = 'lower'
+
+[tool.sqlfluff.rules.capitalisation.identifier]
+extended_capitalisation_policy = 'lower'
+
+[tool.sqlfluff.rules.capitalisation.functions]
+extended_capitalisation_policy = 'lower'
+
+[tool.sqlfluff.rules.capitalisation.literals]
+capitalisation_policy = 'lower'
+
+[tool.sqlfluff.rules.capitalisation.types]
+extended_capitalisation_policy = 'lower'

@@ -8,7 +8,7 @@ import responses
 
 from printify_client.shop import Shop
 from printify_client.models.order import LineItem, Address
-from printify_client.exceptions import ValidationError, AuthenticationError, NotFoundError
+from printify_client.exceptions import ValidationError, NotFoundError
 
 
 # Load test fixtures
@@ -157,22 +157,14 @@ def test_shop_get_products():
         status=200,
     )
     
-    # Mock products list - page 1
+    # Mock products list (single page; last_page=1 in the fixture)
     responses.add(
         responses.GET,
         "https://api.printify.com/v1/shops/shop_123/products.json",
         json=FIXTURES["product_list_response"],
         status=200,
     )
-    
-    # Mock empty response for subsequent pages
-    responses.add(
-        responses.GET,
-        "https://api.printify.com/v1/shops/shop_123/products.json",
-        json={"current_page": 2, "data": [], "last_page": 1, "total": 2},
-        status=200,
-    )
-    
+
     shop = Shop(shop_id="shop_123", api_key="test_api_key")
     products = shop.get_products()
     
@@ -236,24 +228,16 @@ def test_shop_filter_products():
         status=200,
     )
     
-    # Mock products list - page 1
+    # Mock products list (single page; last_page=1 in the fixture)
     responses.add(
         responses.GET,
         "https://api.printify.com/v1/shops/shop_123/products.json",
         json=FIXTURES["product_list_response"],
         status=200,
     )
-    
-    # Mock empty response for subsequent pages
-    responses.add(
-        responses.GET,
-        "https://api.printify.com/v1/shops/shop_123/products.json",
-        json={"current_page": 2, "data": [], "last_page": 1, "total": 2},
-        status=200,
-    )
-    
+
     shop = Shop(shop_id="shop_123", api_key="test_api_key")
-    
+
     # Filter by blueprint_id
     filtered = shop.filter_products(blueprint_id=3)
     assert len(filtered) == 1
@@ -279,27 +263,15 @@ def test_shop_calculate_shipping():
         status=200,
     )
     
-    # Mock products list (needed for shipping calculation) - page 1
+    # Mock the single product referenced by the line item. Shipping
+    # calculation fetches only the products in the order, not the catalog.
     responses.add(
         responses.GET,
-        "https://api.printify.com/v1/shops/shop_123/products.json",
-        json={
-            "current_page": 1,
-            "data": [FIXTURES["product_response"]],
-            "last_page": 1,
-            "total": 1
-        },
+        "https://api.printify.com/v1/shops/shop_123/products/test_product_123.json",
+        json=FIXTURES["product_response"],
         status=200,
     )
-    
-    # Mock empty response for subsequent pages
-    responses.add(
-        responses.GET,
-        "https://api.printify.com/v1/shops/shop_123/products.json",
-        json={"current_page": 2, "data": [], "last_page": 1, "total": 1},
-        status=200,
-    )
-    
+
     # Mock shipping profile
     responses.add(
         responses.GET,
@@ -416,39 +388,32 @@ def test_shop_clear_cache():
         status=200,
     )
     
-    # Mock products list - multiple times for page 1 and empty responses for page 2+
-    for _ in range(3):  # Called 3 times in the test
-        responses.add(
-            responses.GET,
-            "https://api.printify.com/v1/shops/shop_123/products.json",
-            json=FIXTURES["product_list_response"],
-            status=200,
-        )
-        # Add empty response for page 2+
-        responses.add(
-            responses.GET,
-            "https://api.printify.com/v1/shops/shop_123/products.json",
-            json={"current_page": 2, "data": [], "last_page": 1, "total": 2},
-            status=200,
-        )
-    
+    # Mock products list (single page; one registration is reused for every
+    # matching request, so it serves all get_products() calls in this test)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops/shop_123/products.json",
+        json=FIXTURES["product_list_response"],
+        status=200,
+    )
+
     shop = Shop(shop_id="shop_123", api_key="test_api_key", enable_cache=True)
     
     # First call - should hit API
-    products1 = shop.get_products()
+    shop.get_products()
     call_count_1 = len([c for c in responses.calls if 'products.json' in c.request.url])
-    
+
     # Second call - should use cache
-    products2 = shop.get_products()
+    shop.get_products()
     call_count_2 = len([c for c in responses.calls if 'products.json' in c.request.url])
-    
+
     assert call_count_1 == call_count_2  # No new API call
-    
+
     # Clear cache
     shop.clear_cache()
-    
+
     # Third call - should hit API again
-    products3 = shop.get_products()
+    shop.get_products()
     call_count_3 = len([c for c in responses.calls if 'products.json' in c.request.url])
     
     assert call_count_3 == call_count_2 + 1  # New API call after cache clear
@@ -473,30 +438,23 @@ def test_shop_caching_disabled():
         status=200,
     )
     
-    # Mock products list - multiple times for page 1 and empty responses for page 2+
-    for _ in range(2):  # Called 2 times in the test
-        responses.add(
-            responses.GET,
-            "https://api.printify.com/v1/shops/shop_123/products.json",
-            json=FIXTURES["product_list_response"],
-            status=200,
-        )
-        # Add empty response for page 2+
-        responses.add(
-            responses.GET,
-            "https://api.printify.com/v1/shops/shop_123/products.json",
-            json={"current_page": 2, "data": [], "last_page": 1, "total": 2},
-            status=200,
-        )
-    
+    # Mock products list (single page; one registration is reused for every
+    # matching request, so it serves all get_products() calls in this test)
+    responses.add(
+        responses.GET,
+        "https://api.printify.com/v1/shops/shop_123/products.json",
+        json=FIXTURES["product_list_response"],
+        status=200,
+    )
+
     shop = Shop(shop_id="shop_123", api_key="test_api_key", enable_cache=False)
     
     # First call
-    products1 = shop.get_products()
+    shop.get_products()
     call_count_1 = len([c for c in responses.calls if 'products.json' in c.request.url])
-    
+
     # Second call - should NOT use cache
-    products2 = shop.get_products()
+    shop.get_products()
     call_count_2 = len([c for c in responses.calls if 'products.json' in c.request.url])
     
     # With caching disabled, should make a new API call

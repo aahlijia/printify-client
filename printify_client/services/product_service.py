@@ -6,7 +6,7 @@ operations including fetching, filtering, and caching product data.
 """
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from printify_client.client import APIClient
 from printify_client.cache import CacheManager
 from printify_client.models import Product, parse_product
@@ -31,7 +31,7 @@ class ProductService:
         >>> products = service.get_all_products()
         >>> product = service.get_product_by_id("prod_123")
     """
-    
+
     def __init__(self, client: APIClient, shop_id: str, cache_manager: CacheManager):
         """
         Initialize the product service.
@@ -44,7 +44,7 @@ class ProductService:
         self.client = client
         self.shop_id = shop_id
         self.cache = cache_manager
-    
+
     def get_all_products(self, include_disabled: bool = False) -> List[Product]:
         """
         Fetch all products with concurrent pagination.
@@ -64,23 +64,23 @@ class ProductService:
             >>> all_products = service.get_all_products(include_disabled=True)
         """
         cache_key = f"products_{self.shop_id}_{include_disabled}"
-        
+
         # Check cache first
-        if cached := self.cache.get(cache_key):
+        if (cached := self.cache.get(cache_key)) is not None:
             return cached
-        
+
         # Fetch products with concurrent pagination
         products = self._fetch_pages_concurrently()
-        
+
         # Filter out products without enabled variants unless explicitly requested
         if not include_disabled:
             products = [p for p in products if p.enabled_variants]
-        
+
         # Cache the results
         self.cache.set(cache_key, products)
-        
+
         return products
-    
+
     def get_product_by_id(self, product_id: str) -> Product:
         """
         Fetch single product by ID.
@@ -98,21 +98,21 @@ class ProductService:
             >>> product = service.get_product_by_id("prod_123")
         """
         cache_key = f"product_{self.shop_id}_{product_id}"
-        
+
         # Check cache first
-        if cached := self.cache.get(cache_key):
+        if (cached := self.cache.get(cache_key)) is not None:
             return cached
-        
+
         # Fetch from API
         endpoint = f"/shops/{self.shop_id}/products/{product_id}.json"
         data = self.client.get(endpoint)
-        
+
         # Parse and cache
         product = self._parse_product(data)
         self.cache.set(cache_key, product)
-        
+
         return product
-    
+
     def filter_products(self, **filters) -> List[Product]:
         """
         Filter products by attributes.
@@ -132,7 +132,7 @@ class ProductService:
         """
         # Get all products (this will use cache if available)
         products = self.get_all_products()
-        
+
         # Apply filters
         filtered = products
         for key, value in filters.items():
@@ -140,102 +140,83 @@ class ProductService:
                 p for p in filtered
                 if hasattr(p, key) and getattr(p, key) == value
             ]
-        
+
         return filtered
-    
+
     def _fetch_pages_concurrently(self) -> List[Product]:
         """
-        Fetch multiple pages using ThreadPoolExecutor.
-        
-        Implements concurrent pagination with 4 workers. Automatically detects
-        when no more pages exist by catching 404 errors or empty responses.
-        
+        Fetch all product pages using Printify's pagination metadata.
+
+        Fetches the first page to read the ``last_page`` count, then fetches
+        any remaining pages concurrently in a single wave (4 workers).
+
         Returns:
             List of all Product objects from all pages
         """
-        products = []
-        page = 1
-        max_workers = 4
-        
-        # Fetch first page to determine if there are more pages
-        first_page_products = self._fetch_page(page)
-        if not first_page_products:
+        first_data = self._fetch_page_data(1)
+        products = [
+            self._parse_product(p) for p in first_data.get('data', [])
+        ]
+        if not products:
             return []
-        
-        products.extend(first_page_products)
-        
-        # If we got a full page, there might be more pages
-        # Printify typically returns 10-20 items per page
-        # We'll continue fetching until we get a 404 or empty response
-        if len(first_page_products) > 0:
-            current_page = 2
-            
-            # Use ThreadPoolExecutor to fetch multiple pages concurrently
-            with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                # Keep fetching pages until we hit an empty page or 404
-                while True:
-                    # Submit a batch of page requests
-                    futures = {}
-                    for i in range(max_workers):
-                        future = executor.submit(self._fetch_page, current_page + i)
-                        futures[future] = current_page + i
-                    
-                    # Collect results from this batch
-                    batch_results = {}
-                    for future in as_completed(futures):
-                        page_num = futures[future]
-                        
-                        try:
-                            page_products = future.result()
-                            batch_results[page_num] = page_products if page_products else []
-                            
-                        except (NotFoundError, Exception):
-                            # 404 or any error means this page doesn't exist
-                            batch_results[page_num] = []
-                    
-                    # Add products from successful pages (in order)
-                    has_any_products = False
-                    for page_num in sorted(batch_results.keys()):
-                        if batch_results[page_num]:
-                            products.extend(batch_results[page_num])
-                            has_any_products = True
-                    
-                    # If no pages in this batch had products, we're done
-                    if not has_any_products:
-                        break
-                    
-                    # Move to the next batch
-                    current_page += max_workers
-        
+
+        last_page = first_data.get('last_page', 1)
+        if last_page <= 1:
+            return products
+
+        # Fetch the remaining pages concurrently in a single wave.
+        results: Dict[int, List[Product]] = {}
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            future_to_page = {
+                executor.submit(self._fetch_page, page): page
+                for page in range(2, last_page + 1)
+            }
+            for future in as_completed(future_to_page):
+                page = future_to_page[future]
+                try:
+                    results[page] = future.result()
+                except NotFoundError:
+                    # Page vanished between the metadata read and the fetch;
+                    # treat it as empty. Other errors propagate.
+                    results[page] = []
+
+        for page in sorted(results):
+            products.extend(results[page])
+
         return products
-    
-    def _fetch_page(self, page: int) -> List[Product]:
+
+    def _fetch_page_data(self, page: int) -> Dict[str, Any]:
         """
-        Fetch a single page of products.
-        
+        Fetch the raw API response for a single page of products.
+
         Args:
             page: Page number to fetch (1-indexed)
-        
+
         Returns:
-            List of Product objects from the page, empty list if page not found
-        
+            Raw API response dictionary, including pagination metadata
+
         Raises:
             NotFoundError: If the page doesn't exist (404)
         """
-        try:
-            endpoint = f"/shops/{self.shop_id}/products.json?page={page}"
-            data = self.client.get(endpoint) # , params={"page": page}
-            
-            # Parse products from response
-            # The API returns a 'data' key with the list of products
-            products_data = data.get('data', [])
-            
-            return [self._parse_product(p) for p in products_data]
-        
-        except NotFoundError:
-            # 404 means we've reached the end of pagination
-            raise
-    
+        endpoint = f"/shops/{self.shop_id}/products.json?page={page}"
+        return self.client.get(endpoint)
+
+    def _fetch_page(self, page: int) -> List[Product]:
+        """
+        Fetch and parse a single page of products.
+
+        Args:
+            page: Page number to fetch (1-indexed)
+
+        Returns:
+            List of Product objects from the page
+
+        Raises:
+            NotFoundError: If the page doesn't exist (404)
+        """
+        data = self._fetch_page_data(page)
+        return [self._parse_product(p) for p in data.get('data', [])]
+
     def _parse_product(self, data: Dict[str, Any]) -> Product:
         """
         Convert API response to Product model.

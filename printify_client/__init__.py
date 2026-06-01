@@ -39,7 +39,7 @@ Example:
     >>> print(f"Order created: {order.id}")
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 # Import main entry point
 from printify_client.shop import Shop
@@ -58,7 +58,7 @@ from printify_client.exceptions import (
     APIError,
     ValidationError,
     ShippingCalculationError,
-    TimeoutError,
+    PrintifyTimeoutError,
 )
 
 # Explicit exports for better IDE support and documentation
@@ -87,5 +87,5 @@ __all__ = [
     "APIError",
     "ValidationError",
     "ShippingCalculationError",
-    "TimeoutError",
+    "PrintifyTimeoutError",
 ]
