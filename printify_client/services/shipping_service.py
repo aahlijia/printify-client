@@ -228,7 +228,7 @@ class ShippingService:
         cache_key = f"shipping_profile_{blueprint_id}_{print_provider_id}_{country}"
         
         # Check cache first
-        if cached := self.cache.get(cache_key):
+        if (cached := self.cache.get(cache_key)) is not None:
             return cached
         
         # Fetch from API
